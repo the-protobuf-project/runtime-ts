@@ -6,7 +6,7 @@ Calls and serves protobuf services over HTTP. Generated clients take a
 |                    | What it speaks                                                     | Use it for                                              |
 | ------------------ | ------------------------------------------------------------------ | ------------------------------------------------------- |
 | `httpTransport`    | REST, through each RPC's `google.api.http` binding, with protojson | gRPC-gateway, ESPv2, Envoy transcoding, any AIP-127 API |
-| `connectTransport` | The [Connect](https://connectrpc.com) protocol, JSON or binary     | connect-go, connect-es, Envoy, `connectHandler`         |
+| `connectTransport` | The [Connect](https://connectrpc.com) protocol, JSON or binary, all four call shapes | connect-go, connect-es, Envoy, the Go and Rust HybridServers, `connectHandler` |
 | `connectHandler`   | Serves implementations over Connect as a fetch handler             | `Bun.serve`, `Deno.serve`, Workers, Node, tests         |
 
 ```sh
@@ -43,6 +43,35 @@ const book = await rest.createBook(
 Every failure rejects with a `StatusError` from `@the-protobuf-project/errors`,
 read from `google.rpc.Status`, Google's `{"error": ...}` envelope, a Connect
 error body, or the HTTP status.
+
+### Stream
+
+`connectTransport` serves every call shape. What each needs from the platform:
+
+| Call             | Over                                       | Bun, Node, Deno | Workers, browsers |
+| ---------------- | ------------------------------------------ | --------------- | ----------------- |
+| unary            | fetch                                      | yes             | yes               |
+| server streaming | fetch                                      | yes             | yes               |
+| client streaming | fetch, streamed request body (half duplex) | yes             | where fetch streams request bodies |
+| bidi             | full-duplex HTTP/2, via `http2Duplex()`    | yes             | no                |
+
+```ts
+import { connectTransport } from "@the-protobuf-project/network";
+import { http2Duplex } from "@the-protobuf-project/network/node"; // Bun, Node and Deno only
+
+const duplex = http2Duplex();
+const transport = connectTransport({ baseUrl: "http://localhost:8080", format: "binary", duplex });
+
+for await (const shelf of transport.serverStream(watchShelf, { name: "shelves/poetry" })) show(shelf);
+const { imported } = await transport.clientStream(importBooks, books());
+for await (const reply of transport.bidiStream(chat, questions())) show(reply); // each as it arrives
+
+duplex.close();
+```
+
+A stream that fails throws the call's `StatusError`, with its code, after the
+replies that came before it. http:// URLs use cleartext HTTP/2 (h2c), which the
+Go and Rust HybridServers serve on their HTTP port; https:// ones use TLS.
 
 ### Call through a Cloudflare service binding
 
@@ -97,12 +126,18 @@ const logging = (inner: Transport): Transport => ({
 
 | Export | Kind | Description |
 | --- | --- | --- |
+| `ConnectTransport` | type | A Connect transport, which always has the streaming calls. |
 | `ConnectTransportOptions` | interface | Options for the Connect transport. |
 | `connectError` | function | Reads a Connect error body: {"code": "not_found", "message": "...", "details": [...]}. |
-| `connectTransport` | function | Calls RPCs with the Connect protocol's unary requests: a POST to /<package.Service>/<Method>. |
+| `connectTransport` | function | Calls RPCs with the Connect protocol: a POST to /<package.Service>/<Method>. |
 | `connectHandler` | function | Serves service implementations over the Connect protocol's unary calls, JSON or binary, as a fetch handler: hand it to Bun.serve, Deno.serve, a Worker's fetch, or connectTransport's fetch option in tests. |
 | `ServiceDescriptor` | interface | A generated service descriptor: `<Service>Descriptor`. |
 | `ServiceImpl` | type | An implementation of a generated service interface. |
+| `COMPRESSED` | const | The message is compressed. |
+| `END_STREAM` | const | The envelope is the stream's last: JSON with the error and trailers. |
+| `endStreamError` | function | Reads an end-stream envelope: {"error": {...}, "metadata": {...}}. |
+| `envelope` | function | One Connect streaming envelope: a flags byte, a big-endian length, the data. |
+| `envelopes` | function | Splits a byte stream into envelopes, however it was chunked. |
 | `httpError` | function | Reads google.rpc.Status, or Google's {"error": {...}} envelope, from an error body. |
 | `httpTransport` | function | Calls RPCs through their google.api.http bindings, with protojson bodies. |
 | `expandPath` | function | Expands a google.api.http path template with values from the request. |
@@ -111,11 +146,22 @@ const logging = (inner: Transport): Transport => ({
 | `CallOptions` | interface | Per-call options. |
 | `callHeaders` | function | Resolves static or dynamic headers and merges per-call ones. |
 | `callSignal` | function | Combines a caller's signal with a timeout. |
+| `Duplex` | interface | Makes full-duplex HTTP exchanges, which fetch cannot: the request body is still being sent while the response is read. |
+| `DuplexRequest` | interface | One HTTP exchange whose request body streams while its response is read. |
+| `DuplexResponse` | interface | The response to a {@link DuplexRequest}: status, headers, and the body as it arrives. |
 | `Fetch` | type | The fetch function transports use; a Cloudflare service binding's fetch fits. |
 | `FetchTransportOptions` | interface | Options shared by the HTTP-based transports. |
 | `HttpRule` | interface | A google.api.http binding. |
 | `MethodDescriptor` | interface | Everything a transport needs to call one RPC. |
-| `Transport` | interface | Sends unary RPCs. |
+| `Transport` | interface | Sends RPCs. |
+
+### `@the-protobuf-project/network/node`
+
+| Export | Kind | Description |
+| --- | --- | --- |
+| `Http2DuplexOptions` | interface | Options for {@link http2Duplex}. |
+| `Http2Duplex` | interface | A {@link Duplex} that can also close its connections. |
+| `http2Duplex` | function | Makes full-duplex requests over HTTP/2: TLS (ALPN h2) for https:// URLs, cleartext (h2c, prior knowledge) for http:// ones. |
 
 <!-- api:end -->
 

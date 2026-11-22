@@ -33,9 +33,46 @@ export interface CallOptions {
   timeoutMs?: number;
 }
 
-/** Sends unary RPCs. Generated clients take one. */
+/**
+ * Sends RPCs. Generated clients take one. Every transport sends unary calls; the streaming
+ * methods are there when the protocol and the platform allow them.
+ */
 export interface Transport {
   unary<I, O>(method: MethodDescriptor<I, O>, request: I, options?: CallOptions): Promise<O>;
+  /** One request, a stream of replies. */
+  serverStream?<I, O>(method: MethodDescriptor<I, O>, request: I, options?: CallOptions): AsyncIterable<O>;
+  /** A stream of requests, one reply once they are all sent. */
+  clientStream?<I, O>(method: MethodDescriptor<I, O>, requests: AsyncIterable<I>, options?: CallOptions): Promise<O>;
+  /** Requests and replies at the same time, over a full-duplex connection. */
+  bidiStream?<I, O>(
+    method: MethodDescriptor<I, O>,
+    requests: AsyncIterable<I>,
+    options?: CallOptions,
+  ): AsyncIterable<O>;
+}
+
+/** One HTTP exchange whose request body streams while its response is read. */
+export interface DuplexRequest {
+  url: string;
+  headers: Record<string, string>;
+  body: AsyncIterable<Uint8Array>;
+  signal?: AbortSignal;
+}
+
+/** The response to a {@link DuplexRequest}: status, headers, and the body as it arrives. */
+export interface DuplexResponse {
+  status: number;
+  headers: Record<string, string>;
+  body: AsyncIterable<Uint8Array>;
+}
+
+/**
+ * Makes full-duplex HTTP exchanges, which fetch cannot: the request body is still being
+ * sent while the response is read. Bidi streaming needs one; `http2Duplex()` from
+ * `@the-protobuf-project/network/node` is the one for Bun, Node and Deno.
+ */
+export interface Duplex {
+  request(request: DuplexRequest): Promise<DuplexResponse>;
 }
 
 /** The fetch function transports use; a Cloudflare service binding's fetch fits. */
