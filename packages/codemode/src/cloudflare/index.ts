@@ -4,8 +4,8 @@
 import type { Catalog } from "../catalog/types.ts";
 import type { Connector } from "../connector/types.ts";
 
-export { WorkerLoaderExecutor, type WorkerLoader, type WorkerLoaderExecutorOptions } from "./executor.ts";
-export { SqliteStore, durableObjectSql, type DurableObjectSql } from "../store/sqlite.ts";
+export { type DurableObjectSql, durableObjectSql, SqliteStore } from "../store/sqlite.ts";
+export { type WorkerLoader, WorkerLoaderExecutor, type WorkerLoaderExecutorOptions } from "./executor.ts";
 
 /** The tool shape @cloudflare/codemode's CodemodeConnector.tools() returns. */
 export interface CloudflareConnectorTool {

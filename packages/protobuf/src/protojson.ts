@@ -1,7 +1,7 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { invalid } from "@the-protobuf-project/runtime-ts-errors";
+import { invalid } from "@the-protobuf-project/errors";
 import { decodeBase64, encodeBase64 } from "./base64.ts";
 import type { EnumCodec, JsonValue, MessageCodec } from "./types.ts";
 
@@ -104,7 +104,8 @@ export const protojson = {
 
   message<T>(codec: MessageCodec<T>): JsonReader<T> {
     const acceptsNull = codec.typeName === "google.protobuf.Value";
-    return (value, path) => (present(value) || (acceptsNull && value === null) ? codec.fromJson(value, path) : undefined);
+    return (value, path) =>
+      present(value) || (acceptsNull && value === null) ? codec.fromJson(value, path) : undefined;
   },
 
   list<T>(read: JsonReader<T>): JsonReader<T[]> {

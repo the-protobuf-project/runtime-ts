@@ -10,7 +10,7 @@ for p in packages/*/package.json; do
     const pkg = await Bun.file(file).json();
     pkg.version = version;
     for (const name of Object.keys(pkg.dependencies ?? {})) {
-      if (name.startsWith("@the-protobuf-project/runtime-ts-")) pkg.dependencies[name] = `^${version}`;
+      if (name.startsWith("@the-protobuf-project/")) pkg.dependencies[name] = `^${version}`;
     }
     await Bun.write(file, JSON.stringify(pkg, null, 2) + "\n");
   ' "$p" "$version"

@@ -1,7 +1,7 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { StatusError } from "@the-protobuf-project/runtime-ts-errors";
+import { StatusError } from "@the-protobuf-project/errors";
 import type { RuntimeState } from "./state.ts";
 import type { RollbackResult } from "./types.ts";
 
@@ -13,7 +13,8 @@ import type { RollbackResult } from "./types.ts";
 export async function rollback(state: RuntimeState, executionId: string): Promise<RollbackResult> {
   const exec = await state.store.getExecution(executionId);
   if (!exec) throw new StatusError("NOT_FOUND", `no execution ${executionId}`);
-  if (exec.status === "running") throw new StatusError("FAILED_PRECONDITION", `execution ${executionId} is still running`);
+  if (exec.status === "running")
+    throw new StatusError("FAILED_PRECONDITION", `execution ${executionId} is still running`);
 
   const out: RollbackResult = { executionId, status: exec.status, reverted: [], skipped: [], failures: [] };
   const applied = exec.log.filter((e) => e.kind === "call" && !e.error && !e.reverted).sort((a, b) => b.seq - a.seq);

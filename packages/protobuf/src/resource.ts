@@ -1,7 +1,7 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { invalid } from "@the-protobuf-project/runtime-ts-errors";
+import { invalid } from "@the-protobuf-project/errors";
 
 /** Formats, parses and checks names of one google.api.resource pattern. */
 export interface ResourceName<V extends string, N extends string> {
@@ -40,7 +40,8 @@ export function resourceName<V extends string, N extends string>(type: string, p
     format(values: Record<V, string>): N {
       return pattern.replace(variable, (_, name: string) => {
         const v = (values as Record<string, string>)[name];
-        if (!v || v.includes("/")) return invalid(type, `variable ${name} must be a non-empty segment, got ${JSON.stringify(v)}`);
+        if (!v || v.includes("/"))
+          return invalid(type, `variable ${name} must be a non-empty segment, got ${JSON.stringify(v)}`);
         return v;
       }) as N;
     },
@@ -48,7 +49,7 @@ export function resourceName<V extends string, N extends string>(type: string, p
       const m = regex.exec(name);
       if (!m) return invalid(type, `${JSON.stringify(name)} does not match ${pattern}`);
       const out: Record<string, string> = {};
-      vars.forEach((v, i) => (out[v] = m[i + 1] as string));
+      for (const [i, v] of vars.entries()) out[v] = m[i + 1] as string;
       return out as Record<V, string>;
     },
     matches(name: string): name is N {

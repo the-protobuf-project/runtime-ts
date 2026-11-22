@@ -1,7 +1,7 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { jsonSchema, tool, type Tool } from "ai";
+import { jsonSchema, type Tool, tool } from "ai";
 import type { CodemodeRuntime } from "../runtime/runtime.ts";
 import type { CodeInput, CodeOutput } from "../runtime/types.ts";
 

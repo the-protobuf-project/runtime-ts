@@ -59,20 +59,36 @@ export class DenoExecutor implements Executor {
     const url = `data:text/javascript;base64,${Buffer.from(program).toString("base64")}`;
     const child = spawn(
       this.command,
-      ["run", ...denied, "--no-prompt", "--quiet", "--no-config", "--no-lock", `--v8-flags=--max-old-space-size=${request.memoryMb}`, url],
-      { stdio: ["pipe", "pipe", "pipe"], env: { NO_COLOR: "1", PATH: process.env["PATH"] ?? "" } },
+      [
+        "run",
+        ...denied,
+        "--no-prompt",
+        "--quiet",
+        "--no-config",
+        "--no-lock",
+        `--v8-flags=--max-old-space-size=${request.memoryMb}`,
+        url,
+      ],
+      { stdio: ["pipe", "pipe", "pipe"], env: { NO_COLOR: "1", PATH: process.env.PATH ?? "" } },
     );
     const timer = deadline(request.timeoutMs, request.signal);
     let stderr = "";
-    child.stderr.on("data", (d: Buffer) => (stderr += d.toString()).length > 8192 && (stderr = stderr.slice(-8192)));
+    child.stderr.on("data", (d: Buffer) => {
+      stderr = (stderr + d.toString()).slice(-8192);
+    });
 
     const done = new Promise<ExecuteResult>((resolve) => {
       let buf = "";
       child.stdout.on("data", (d: Buffer) => {
         buf += d.toString();
-        let at: number;
-        while ((at = buf.indexOf("\n")) >= 0) {
-          const msg = JSON.parse(buf.slice(0, at)) as { t: string; id?: number; op?: string; payload?: string; result?: string };
+        for (let at = buf.indexOf("\n"); at >= 0; at = buf.indexOf("\n")) {
+          const msg = JSON.parse(buf.slice(0, at)) as {
+            t: string;
+            id?: number;
+            op?: string;
+            payload?: string;
+            result?: string;
+          };
           buf = buf.slice(at + 1);
           if (msg.t === "done") resolve({ ok: true, json: msg.result ?? "" });
           else if (msg.t === "call") {

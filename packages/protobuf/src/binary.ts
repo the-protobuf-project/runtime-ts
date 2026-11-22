@@ -1,11 +1,11 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { invalid } from "@the-protobuf-project/runtime-ts-errors";
-import { BinaryReader } from "./wire/reader.ts";
-import { BinaryWriter, WireType } from "./wire/writer.ts";
+import { invalid } from "@the-protobuf-project/errors";
 import { decodeBase64, encodeBase64 } from "./base64.ts";
 import type { MessageCodec } from "./types.ts";
+import { BinaryReader } from "./wire/reader.ts";
+import { type BinaryWriter, WireType } from "./wire/writer.ts";
 
 /** Reads one value of a known type from a reader positioned after its tag. */
 export type ValueReader<T> = (reader: BinaryReader) => T;

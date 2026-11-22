@@ -31,12 +31,11 @@ export function toolDescription(catalog: Catalog, discovery: "progressive" | "in
     const namespaces = catalog.namespaces.map((n) => n.declaration).join("\n");
     return `${howTo}\n\nThe sandbox API:\n\n${catalog.prelude}\n${types}\n${namespaces}`;
   }
-  const list = catalog.namespaces
-    .map((n) => `- ${n.name} (${n.methods.length} methods): ${n.instructions}`)
-    .join("\n");
-  const snippets = catalog.snippets.length > 0
-    ? `\n\nSnippets you can run with codemode.run(name, input): ${catalog.snippets.map((s) => s.name).join(", ")}.`
-    : "";
+  const list = catalog.namespaces.map((n) => `- ${n.name} (${n.methods.length} methods): ${n.instructions}`).join("\n");
+  const snippets =
+    catalog.snippets.length > 0
+      ? `\n\nSnippets you can run with codemode.run(name, input): ${catalog.snippets.map((s) => s.name).join(", ")}.`
+      : "";
   return `${howTo}
 - Before calling a method you have not used, look it up: await codemode.describe("namespace.method") returns its TypeScript.
   codemode.search("keywords") finds methods; codemode.describe("namespace") lists a whole namespace.

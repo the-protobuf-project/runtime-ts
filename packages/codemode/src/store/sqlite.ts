@@ -46,7 +46,7 @@ export class SqliteStore implements Store {
 
   async getExecution(id: string): Promise<Execution | undefined> {
     const row = this.db.prepare("SELECT body FROM codemode_executions WHERE id = ?").get(id) as Row | undefined;
-    return row ? (JSON.parse(String(row["body"])) as Execution) : undefined;
+    return row ? (JSON.parse(String(row.body)) as Execution) : undefined;
   }
 
   async putExecution(e: Execution): Promise<void> {
@@ -68,17 +68,19 @@ export class SqliteStore implements Store {
     const rows = this.db
       .prepare("SELECT body FROM codemode_executions ORDER BY created_at DESC, id DESC LIMIT ?")
       .all(Number.isFinite(limit) ? limit : -1) as Row[];
-    return rows.map((r) => JSON.parse(String(r["body"])) as Execution);
+    return rows.map((r) => JSON.parse(String(r.body)) as Execution);
   }
 
   async getSnippet(name: string): Promise<Snippet | undefined> {
     const row = this.db.prepare("SELECT body FROM codemode_snippets WHERE name = ?").get(name) as Row | undefined;
-    return row ? (JSON.parse(String(row["body"])) as Snippet) : undefined;
+    return row ? (JSON.parse(String(row.body)) as Snippet) : undefined;
   }
 
   async putSnippet(s: Snippet): Promise<void> {
     this.db
-      .prepare("INSERT INTO codemode_snippets (name, body) VALUES (?, ?) ON CONFLICT(name) DO UPDATE SET body = excluded.body")
+      .prepare(
+        "INSERT INTO codemode_snippets (name, body) VALUES (?, ?) ON CONFLICT(name) DO UPDATE SET body = excluded.body",
+      )
       .run(s.name, JSON.stringify(s));
   }
 
@@ -90,7 +92,7 @@ export class SqliteStore implements Store {
 
   async listSnippets(): Promise<Snippet[]> {
     const rows = this.db.prepare("SELECT body FROM codemode_snippets ORDER BY name").all() as Row[];
-    return rows.map((r) => JSON.parse(String(r["body"])) as Snippet);
+    return rows.map((r) => JSON.parse(String(r.body)) as Snippet);
   }
 }
 

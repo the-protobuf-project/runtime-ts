@@ -1,15 +1,15 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { describe, search, type Description, type SearchResults } from "../catalog/search.ts";
-import { StatusError } from "@the-protobuf-project/runtime-ts-errors";
+import { StatusError } from "@the-protobuf-project/errors";
+import { type Description, describe, type SearchResults, search } from "../catalog/search.ts";
 import { normalizeCode } from "../executor/normalize.ts";
 import { expirePaused, pruneExecutions } from "./housekeeping.ts";
 import { runPass } from "./pass.ts";
 import { rollback } from "./rollback.ts";
-import { deleteSnippet, saveSnippet, type SaveSnippetOptions } from "./snippets.ts";
-import { RuntimeState, type CodemodeOptions } from "./state.ts";
-import { toolDescription, type CodemodeTool } from "./tool.ts";
+import { deleteSnippet, type SaveSnippetOptions, saveSnippet } from "./snippets.ts";
+import { type CodemodeOptions, RuntimeState } from "./state.ts";
+import { type CodemodeTool, toolDescription } from "./tool.ts";
 import { truncateResult } from "./truncate.ts";
 import type { CodeInput, CodeOutput, Execution, PendingAction, RollbackResult, Snippet } from "./types.ts";
 
@@ -44,8 +44,16 @@ export class CodemodeRuntime {
   async execute(input: CodeInput): Promise<CodeOutput> {
     const now = Date.now();
     const exec: Execution = {
-      id: crypto.randomUUID(), code: "", status: "running", createdAt: now, updatedAt: now,
-      passes: 0, log: [], approved: [], pending: [], logs: [],
+      id: crypto.randomUUID(),
+      code: "",
+      status: "running",
+      createdAt: now,
+      updatedAt: now,
+      passes: 0,
+      log: [],
+      approved: [],
+      pending: [],
+      logs: [],
     };
     try {
       exec.code = normalizeCode(input.code);
@@ -63,7 +71,8 @@ export class CodemodeRuntime {
   /** Approves the pending call and resumes. */
   async approve({ executionId }: { executionId: string }): Promise<CodeOutput> {
     const exec = await this.load(executionId);
-    if (exec.status !== "paused") throw new StatusError("FAILED_PRECONDITION", `execution ${executionId} is ${exec.status}, not paused`);
+    if (exec.status !== "paused")
+      throw new StatusError("FAILED_PRECONDITION", `execution ${executionId} is ${exec.status}, not paused`);
     exec.approved.push(...exec.pending.map((p) => p.seq));
     return this.pass(exec);
   }
@@ -156,7 +165,8 @@ export class CodemodeRuntime {
     await callHooks(this.state, exec);
     const budget = { maxTokens: this.state.config.runtime?.resultBudgetTokens ?? 6000 };
     const logs = exec.logs.length > 0 ? { logs: exec.logs } : {};
-    if (exec.status === "completed") return { status: "completed", executionId: exec.id, result: truncateResult(raw, budget), ...logs };
+    if (exec.status === "completed")
+      return { status: "completed", executionId: exec.id, result: truncateResult(raw, budget), ...logs };
     if (exec.status === "paused") return { status: "paused", executionId: exec.id, pending: exec.pending };
     return { status: "error", executionId: exec.id, error: exec.error ?? exec.status, ...logs };
   }

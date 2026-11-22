@@ -1,7 +1,7 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { StatusError } from "@the-protobuf-project/runtime-ts-errors";
+import { StatusError } from "@the-protobuf-project/errors";
 
 /** What sandboxed fetch() sends to the host. */
 export interface OutboundRequest {
@@ -46,6 +46,7 @@ export async function outboundFetch(
   if (req.body != null) init.body = req.body;
   const res = await fetch(url, init);
   const body = await res.text();
-  if (body.length > maxBytes) throw new StatusError("RESOURCE_EXHAUSTED", `fetch: response is larger than ${maxBytes} characters`);
+  if (body.length > maxBytes)
+    throw new StatusError("RESOURCE_EXHAUSTED", `fetch: response is larger than ${maxBytes} characters`);
   return { status: res.status, headers: Object.fromEntries(res.headers.entries()), body };
 }

@@ -1,9 +1,9 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
+import { invalid } from "@the-protobuf-project/errors";
 import { protojson } from "../protojson.ts";
 import type { JsonObject, JsonValue, MessageCodec } from "../types.ts";
-import { invalid } from "@the-protobuf-project/runtime-ts-errors";
 import { BinaryReader } from "../wire/reader.ts";
 import { BinaryWriter, WireType } from "../wire/writer.ts";
 
@@ -62,8 +62,10 @@ function decodeValue(input: Uint8Array | BinaryReader, length?: number): JsonVal
   let v: JsonValue = null;
   while (r.pos < end) {
     const [no, wt] = r.tag();
-    if (no === 1) (r.int32(), (v = null));
-    else if (no === 2) v = r.double();
+    if (no === 1) {
+      r.int32();
+      v = null;
+    } else if (no === 2) v = r.double();
     else if (no === 3) v = r.string();
     else if (no === 4) v = r.bool();
     else if (no === 5) v = decodeStruct(r, r.uint32());

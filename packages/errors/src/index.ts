@@ -21,9 +21,21 @@ export type Code =
   | "UNAUTHENTICATED";
 
 const codes: readonly Code[] = [
-  "CANCELLED", "UNKNOWN", "INVALID_ARGUMENT", "DEADLINE_EXCEEDED", "NOT_FOUND",
-  "ALREADY_EXISTS", "PERMISSION_DENIED", "RESOURCE_EXHAUSTED", "FAILED_PRECONDITION",
-  "ABORTED", "OUT_OF_RANGE", "UNIMPLEMENTED", "INTERNAL", "UNAVAILABLE", "DATA_LOSS",
+  "CANCELLED",
+  "UNKNOWN",
+  "INVALID_ARGUMENT",
+  "DEADLINE_EXCEEDED",
+  "NOT_FOUND",
+  "ALREADY_EXISTS",
+  "PERMISSION_DENIED",
+  "RESOURCE_EXHAUSTED",
+  "FAILED_PRECONDITION",
+  "ABORTED",
+  "OUT_OF_RANGE",
+  "UNIMPLEMENTED",
+  "INTERNAL",
+  "UNAVAILABLE",
+  "DATA_LOSS",
   "UNAUTHENTICATED",
 ];
 
@@ -80,18 +92,30 @@ export function codeFromConnect(value: string): Code {
 /** Maps an HTTP status to the gRPC code google.api.http transcoding uses. */
 export function codeFromHttpStatus(status: number): Code {
   switch (status) {
-    case 400: return "INVALID_ARGUMENT";
-    case 401: return "UNAUTHENTICATED";
-    case 403: return "PERMISSION_DENIED";
-    case 404: return "NOT_FOUND";
-    case 409: return "ABORTED";
-    case 412: return "FAILED_PRECONDITION";
-    case 429: return "RESOURCE_EXHAUSTED";
-    case 499: return "CANCELLED";
-    case 501: return "UNIMPLEMENTED";
-    case 503: return "UNAVAILABLE";
-    case 504: return "DEADLINE_EXCEEDED";
-    default: return status >= 500 ? "INTERNAL" : "UNKNOWN";
+    case 400:
+      return "INVALID_ARGUMENT";
+    case 401:
+      return "UNAUTHENTICATED";
+    case 403:
+      return "PERMISSION_DENIED";
+    case 404:
+      return "NOT_FOUND";
+    case 409:
+      return "ABORTED";
+    case 412:
+      return "FAILED_PRECONDITION";
+    case 429:
+      return "RESOURCE_EXHAUSTED";
+    case 499:
+      return "CANCELLED";
+    case 501:
+      return "UNIMPLEMENTED";
+    case 503:
+      return "UNAVAILABLE";
+    case 504:
+      return "DEADLINE_EXCEEDED";
+    default:
+      return status >= 500 ? "INTERNAL" : "UNKNOWN";
   }
 }
 

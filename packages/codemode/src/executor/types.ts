@@ -20,9 +20,7 @@ export interface ExecuteRequest {
 }
 
 /** What the sandbox returned: the script's result envelope, or why it failed. */
-export type ExecuteResult =
-  | { ok: true; json: string }
-  | { ok: false; error: string; aborted?: boolean };
+export type ExecuteResult = { ok: true; json: string } | { ok: false; error: string; aborted?: boolean };
 
 /**
  * Runs untrusted code in isolation. The code gets no network, filesystem,

@@ -4,9 +4,9 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { test } from "node:test";
-import { normalizeCode, type Executor, type HostCall } from "../src/index.ts";
 import { DenoExecutor } from "../src/deno/index.ts";
 import { buildScript } from "../src/executor/prelude.ts";
+import { type Executor, type HostCall, normalizeCode } from "../src/index.ts";
 import { QuickJSExecutor } from "../src/quickjs/index.ts";
 
 const echoHost: HostCall = async (op, payload) => {
@@ -14,8 +14,15 @@ const echoHost: HostCall = async (op, payload) => {
   return JSON.stringify({ value: null });
 };
 
-async function run(executor: Executor, code: string, options: { host?: HostCall; timeoutMs?: number; signal?: AbortSignal } = {}) {
-  const script = buildScript({ namespaces: { api: ["echo"] }, snippets: { twice: "async (n) => n * 2" } }, normalizeCode(code));
+async function run(
+  executor: Executor,
+  code: string,
+  options: { host?: HostCall; timeoutMs?: number; signal?: AbortSignal } = {},
+) {
+  const script = buildScript(
+    { namespaces: { api: ["echo"] }, snippets: { twice: "async (n) => n * 2" } },
+    normalizeCode(code),
+  );
   const res = await executor.execute({
     script,
     host: options.host ?? echoHost,
@@ -23,10 +30,12 @@ async function run(executor: Executor, code: string, options: { host?: HostCall;
     memoryMb: 32,
     signal: options.signal ?? new AbortController().signal,
   });
-  return res.ok ? (JSON.parse(res.json) as { ok: boolean; value?: unknown; error?: { message: string; code?: string } }) : res;
+  return res.ok
+    ? (JSON.parse(res.json) as { ok: boolean; value?: unknown; error?: { message: string; code?: string } })
+    : res;
 }
 
-const deno = process.env["CODEMODE_DENO"] ?? "deno";
+const deno = process.env.CODEMODE_DENO ?? "deno";
 const denoAvailable = spawnSync(deno, ["--version"]).status === 0;
 const executors: [string, () => Executor, boolean][] = [
   ["QuickJS", () => new QuickJSExecutor(), false],
@@ -40,12 +49,21 @@ for (const [name, make, skip] of executors) {
   });
 
   test(`${name}: the sandbox has no network, modules or process`, { skip }, async () => {
-    const out = await run(make(), 'async () => [typeof fetch, typeof require, typeof process, typeof Deno === "undefined" ? "undefined" : typeof Deno.readTextFile]');
+    const out = await run(
+      make(),
+      'async () => [typeof fetch, typeof require, typeof process, typeof Deno === "undefined" ? "undefined" : typeof Deno.readTextFile]',
+    );
     if ("value" in out && Array.isArray(out.value) && out.value[3] === "function") {
       // Deno exposes its API, but without permissions every call is denied.
-      const denied = await run(make(), `async () => { try { await Deno.readTextFile("/etc/hosts"); return "read"; } catch (e) { return e.name; } }`);
+      const denied = await run(
+        make(),
+        `async () => { try { await Deno.readTextFile("/etc/hosts"); return "read"; } catch (e) { return e.name; } }`,
+      );
       assert.deepEqual(denied, { ok: true, value: "NotCapable" });
-      const net = await run(make(), `async () => { try { await fetch("https://example.com"); return "fetched"; } catch (e) { return e.name; } }`);
+      const net = await run(
+        make(),
+        `async () => { try { await fetch("https://example.com"); return "fetched"; } catch (e) { return e.name; } }`,
+      );
       assert.deepEqual(net, { ok: true, value: "NotCapable" });
       return;
     }
@@ -54,7 +72,11 @@ for (const [name, make, skip] of executors) {
 
   test(`${name}: thrown errors keep their code`, { skip }, async () => {
     const host: HostCall = async () => JSON.stringify({ error: { code: "NOT_FOUND", message: "gone" } });
-    const out = await run(make(), "async () => { try { await api.echo({}); } catch (e) { return [e.name, e.code, e.message]; } }", { host });
+    const out = await run(
+      make(),
+      "async () => { try { await api.echo({}); } catch (e) { return [e.name, e.code, e.message]; } }",
+      { host },
+    );
     assert.deepEqual(out, { ok: true, value: ["CodemodeError", "NOT_FOUND", "gone"] });
   });
 
@@ -74,7 +96,10 @@ for (const [name, make, skip] of executors) {
 
   test(`${name}: aborting stops a pass waiting on the host`, { skip }, async () => {
     const controller = new AbortController();
-    const host: HostCall = () => (controller.abort(), new Promise(() => {}));
+    const host: HostCall = () => {
+      controller.abort();
+      return new Promise<string>(() => undefined);
+    };
     const out = await run(make(), "async () => api.echo({})", { host, signal: controller.signal });
     assert.deepEqual(out, { ok: false, error: "aborted", aborted: true });
   });

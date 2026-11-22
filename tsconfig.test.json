@@ -5,8 +5,5 @@
     "composite": false,
     "declaration": false
   },
-  "include": [
-    "packages/*/test",
-    "packages/*/src"
-  ]
+  "include": ["packages/*/test", "packages/*/src", "tools"]
 }

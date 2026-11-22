@@ -1,8 +1,8 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
+import { StatusError } from "@the-protobuf-project/errors";
 import { transform } from "sucrase";
-import { StatusError } from "@the-protobuf-project/runtime-ts-errors";
 
 const fence = /^\s*```[a-zA-Z]*\s*\n([\s\S]*?)\n\s*```\s*$/;
 const functionStart = /^(async\s*(\([^)]*\)|[A-Za-z_$][\w$]*)\s*=>|async\s+function\b|\(\s*async\b)/;
@@ -31,7 +31,10 @@ function stripTypes(src: string): string {
     // Not valid TypeScript: a bare function body with top-level return or
     // await. Strip types from it wrapped in a function, then unwrap.
     try {
-      const wrapped = transform(`async () => {\n${src}\n}`, { transforms: ["typescript"], disableESTransforms: true }).code;
+      const wrapped = transform(`async () => {\n${src}\n}`, {
+        transforms: ["typescript"],
+        disableESTransforms: true,
+      }).code;
       const inner = /^async \(\) => \{\n([\s\S]*)\n\}\s*;?\s*$/.exec(wrapped.trim());
       return inner ? (inner[1] as string) : src;
     } catch (e) {

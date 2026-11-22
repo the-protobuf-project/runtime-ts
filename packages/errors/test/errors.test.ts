@@ -4,14 +4,25 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
-  StatusError, codeFromConnect, codeFromHttpStatus, codeFromNumber, invalid, isCode, toStatusError,
+  codeFromConnect,
+  codeFromHttpStatus,
+  codeFromNumber,
+  invalid,
+  isCode,
+  StatusError,
+  toStatusError,
 } from "../src/index.ts";
 
 test("StatusError carries a code, reason and details, and serialises them", () => {
   const e = new StatusError("NOT_FOUND", "no shelf", { reason: "SHELF_MISSING", details: [{ a: 1 }] });
   assert.equal(e.name, "StatusError");
   assert.ok(e instanceof Error);
-  assert.deepEqual(e.toJSON(), { code: "NOT_FOUND", message: "no shelf", reason: "SHELF_MISSING", details: [{ a: 1 }] });
+  assert.deepEqual(e.toJSON(), {
+    code: "NOT_FOUND",
+    message: "no shelf",
+    reason: "SHELF_MISSING",
+    details: [{ a: 1 }],
+  });
 });
 
 test("codes map from numbers, Connect names and HTTP statuses", () => {
@@ -33,5 +44,8 @@ test("toStatusError keeps StatusErrors and wraps anything else", () => {
 });
 
 test("invalid throws INVALID_ARGUMENT with the path", () => {
-  assert.throws(() => invalid("book.title", "expected a string"), { code: "INVALID_ARGUMENT", message: "book.title: expected a string" });
+  assert.throws(() => invalid("book.title", "expected a string"), {
+    code: "INVALID_ARGUMENT",
+    message: "book.title: expected a string",
+  });
 });
