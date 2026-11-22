@@ -1,0 +1,42 @@
+{
+  "name": "@the-protobuf-project/runtime-ts-network",
+  "version": "0.1.0",
+  "description": "Call and serve protobuf services: google.api.http transcoding and the Connect protocol.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/the-protobuf-project/runtime-ts.git",
+    "directory": "packages/network"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "public"
+  },
+  "engines": {
+    "bun": ">=1.2",
+    "node": ">=22.18"
+  },
+  "files": [
+    "dist",
+    "src",
+    "!**/*.tsbuildinfo"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "bun": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "test": "bun test ./test",
+    "test:node": "node --test \"test/**/*.test.ts\"",
+    "test:deno": "deno test --no-check --allow-read --allow-env --allow-run test/"
+  },
+  "dependencies": {
+    "@the-protobuf-project/runtime-ts-errors": "^0.1.0",
+    "@the-protobuf-project/runtime-ts-protobuf": "^0.1.0"
+  }
+}
