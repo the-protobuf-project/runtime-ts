@@ -68,12 +68,19 @@ export class CodemodeRuntime {
     return out;
   }
 
-  /** Approves the pending call and resumes. */
-  async approve({ executionId }: { executionId: string }): Promise<CodeOutput> {
+  /**
+   * Approves a pending call and resumes. With seq, only that call is approved:
+   * calls that paused alongside it, e.g. from Promise.all, pause again. Without
+   * seq, every pending call is approved; pass seq whenever a person approves
+   * one call they were shown.
+   */
+  async approve({ executionId, seq }: { executionId: string; seq?: number }): Promise<CodeOutput> {
     const exec = await this.load(executionId);
     if (exec.status !== "paused")
       throw new StatusError("FAILED_PRECONDITION", `execution ${executionId} is ${exec.status}, not paused`);
-    exec.approved.push(...exec.pending.map((p) => p.seq));
+    if (seq === undefined) exec.approved.push(...exec.pending.map((p) => p.seq));
+    else if (exec.pending.some((p) => p.seq === seq)) exec.approved.push(seq);
+    else throw new StatusError("FAILED_PRECONDITION", `call ${seq} of execution ${executionId} is not pending`);
     return this.pass(exec);
   }
 

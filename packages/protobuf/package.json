@@ -1,6 +1,6 @@
 {
   "name": "@the-protobuf-project/protobuf",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Protobuf messages in TypeScript: the binary wire format, protojson, well-known types, enums and resource names.",
   "license": "Apache-2.0",
   "type": "module",
@@ -36,6 +36,6 @@
     "test:deno": "deno test --no-check --allow-read --allow-env --allow-run test/"
   },
   "dependencies": {
-    "@the-protobuf-project/errors": "^0.1.1"
+    "@the-protobuf-project/errors": "^0.1.2"
   }
 }
