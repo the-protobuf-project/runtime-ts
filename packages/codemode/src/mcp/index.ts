@@ -11,6 +11,7 @@ import {
 import type { CodemodeRuntime } from "../runtime/runtime.ts";
 import { truncateText } from "../runtime/truncate.ts";
 import type { CodeOutput } from "../runtime/types.ts";
+import { status } from "./status.ts";
 
 /** Options for the Code Mode MCP server. */
 export interface McpServerOptions {
@@ -71,8 +72,13 @@ export function createMcpServer(runtime: CodemodeRuntime, options: McpServerOpti
     tools.push(
       {
         name: "codemode_approve",
-        description: "Approve the call a paused execution is waiting on, and resume it.",
-        inputSchema: executionId,
+        description:
+          "Approve the call a paused execution is waiting on, and resume it. Pass seq to approve one call; without it every pending call is approved.",
+        inputSchema: {
+          type: "object",
+          properties: { executionId: { type: "string" }, seq: { type: "number" } },
+          required: ["executionId"],
+        },
       },
       {
         name: "codemode_reject",
@@ -103,7 +109,15 @@ export function createMcpServer(runtime: CodemodeRuntime, options: McpServerOpti
         case "codemode_approve":
           if (!approvalTools) return refused(request.params.name);
           return output(
-            await settle(server, runtime, await runtime.approve({ executionId: String(args.executionId) }), options),
+            await settle(
+              server,
+              runtime,
+              await runtime.approve({
+                executionId: String(args.executionId),
+                ...(args.seq === undefined ? {} : { seq: Number(args.seq) }),
+              }),
+              options,
+            ),
           );
         case "codemode_reject":
           if (!approvalTools) return refused(request.params.name);
@@ -145,7 +159,7 @@ async function settle(
       },
     });
     if (answer.action === "accept" && answer.content?.approve === true) {
-      current = await runtime.approve({ executionId: current.executionId });
+      current = await runtime.approve({ executionId: current.executionId, seq: p.seq });
     } else {
       await runtime.reject({ executionId: current.executionId, seq: p.seq });
       return { status: "error", executionId: current.executionId, error: `the user declined ${p.path}` };
@@ -155,20 +169,6 @@ async function settle(
     return { ...current, message: options.approvalHint } as CodeOutput;
   }
   return current;
-}
-
-/** An execution as the code tool would have returned it. */
-async function status(runtime: CodemodeRuntime, id: string): Promise<CodeOutput> {
-  const exec = await runtime.getExecution(id);
-  if (!exec) return { status: "error", executionId: id, error: `no execution ${id}` };
-  switch (exec.status) {
-    case "completed":
-      return { status: "completed", executionId: id, result: exec.result };
-    case "paused":
-      return { status: "paused", executionId: id, pending: exec.pending };
-    default:
-      return { status: "error", executionId: id, error: exec.error ?? exec.status };
-  }
 }
 
 function refused(tool: string): CallToolResult {

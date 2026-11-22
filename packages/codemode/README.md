@@ -78,7 +78,9 @@ createMcpServer(runtime, {
   approvalTools: false, // the model gets `code` and `codemode_status` only
   approvalHint: "Ask the user to approve at http://127.0.0.1:4791, then call codemode_status.",
 });
-// your approval page or app calls runtime.pending() and runtime.approve({ executionId })
+// your approval page or app lists runtime.pending() and approves exactly the call
+// a person was shown; other calls that paused with it (Promise.all) pause again
+await runtime.approve({ executionId: p.executionId, seq: p.seq });
 ```
 
 ### Keep executions across restarts
