@@ -65,7 +65,8 @@ export function createMcpServer(runtime: CodemodeRuntime, options: McpServerOpti
   const approvalTools = options.approvalTools !== false;
   tools.push({
     name: "codemode_status",
-    description: "Report an execution's status and result, e.g. after a person approved it elsewhere.",
+    description:
+      "Report an execution's status and result, and the calls a person approved so far (approved), e.g. after approval on another surface.",
     inputSchema: executionId,
   });
   if (approvalTools) {
