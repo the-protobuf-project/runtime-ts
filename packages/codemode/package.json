@@ -58,6 +58,11 @@
       "bun": "./src/ai/index.ts",
       "types": "./dist/ai/index.d.ts",
       "default": "./dist/ai/index.js"
+    },
+    "./openapi": {
+      "bun": "./src/openapi/index.ts",
+      "types": "./dist/openapi/index.d.ts",
+      "default": "./dist/openapi/index.js"
     }
   },
   "scripts": {
@@ -67,6 +72,7 @@
   },
   "dependencies": {
     "@the-protobuf-project/errors": "^0.1.3",
+    "@the-protobuf-project/network": "^0.1.3",
     "@the-protobuf-project/protobuf": "^0.1.3",
     "sucrase": "^3.35.1"
   },
