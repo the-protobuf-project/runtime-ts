@@ -1,7 +1,7 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { StatusError, isCode, toStatusError } from "@the-protobuf-project/errors";
+import { StatusError, isCode, toStatusError } from "@the-protobuf-project/runtime-ts/errors";
 import type { SerializedError } from "./types.ts";
 
 /** The largest value, as JSON characters, the runtime records for replay. */

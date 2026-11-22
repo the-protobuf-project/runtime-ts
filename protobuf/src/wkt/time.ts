@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { MessageCodec } from "../types.ts";
-import { invalid } from "@the-protobuf-project/errors";
+import { invalid } from "@the-protobuf-project/runtime-ts/errors";
 import { BinaryReader } from "../wire/reader.ts";
 import { BinaryWriter, WireType } from "../wire/writer.ts";
 

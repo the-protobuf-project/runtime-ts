@@ -1,7 +1,7 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import type { MessageCodec } from "@the-protobuf-project/protobuf";
+import type { MessageCodec } from "@the-protobuf-project/runtime-ts/protobuf";
 import type { CallContext, Connector, ConnectorMethod, ConnectorOptions, Replay } from "./types.ts";
 
 /** A typed unary method, before it is wrapped for protojson. */

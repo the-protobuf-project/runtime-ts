@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { describe, search, type Description, type SearchResults } from "../catalog/search.ts";
-import { StatusError } from "@the-protobuf-project/errors";
+import { StatusError } from "@the-protobuf-project/runtime-ts/errors";
 import { normalizeCode } from "../executor/normalize.ts";
 import { expirePaused, pruneExecutions } from "./housekeeping.ts";
 import { runPass } from "./pass.ts";

@@ -4,7 +4,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { CodemodeRuntime, connector, unaryMethod, type Catalog, type CodemodeConfig, type Hooks } from "../src/index.ts";
-import { StructCodec } from "@the-protobuf-project/protobuf";
+import { StructCodec } from "@the-protobuf-project/runtime-ts/protobuf";
 import { QuickJSExecutor } from "../src/quickjs/index.ts";
 
 const catalog: Catalog = {

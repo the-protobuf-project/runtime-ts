@@ -1,7 +1,7 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { invalid } from "@the-protobuf-project/errors";
+import { invalid } from "@the-protobuf-project/runtime-ts/errors";
 import { decodeBase64, encodeBase64 } from "./base64.ts";
 import type { EnumCodec, JsonValue, MessageCodec } from "./types.ts";
 

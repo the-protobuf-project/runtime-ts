@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { describe, search } from "../catalog/search.ts";
-import { StatusError } from "@the-protobuf-project/errors";
+import { StatusError } from "@the-protobuf-project/runtime-ts/errors";
 import { buildScript } from "../executor/prelude.ts";
 import type { HostCall } from "../executor/types.ts";
 import { outboundFetch, type OutboundRequest } from "./outbound.ts";

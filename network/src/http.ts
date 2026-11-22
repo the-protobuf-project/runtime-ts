@@ -1,8 +1,8 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import type { JsonObject, JsonValue } from "@the-protobuf-project/protobuf";
-import { StatusError, codeFromHttpStatus, codeFromNumber, isCode } from "@the-protobuf-project/errors";
+import type { JsonObject, JsonValue } from "@the-protobuf-project/runtime-ts/protobuf";
+import { StatusError, codeFromHttpStatus, codeFromNumber, isCode } from "@the-protobuf-project/runtime-ts/errors";
 import { deletePath, expandPath, getPath, jsonPath, toQuery } from "./path_template.ts";
 import { callHeaders, callSignal, type FetchTransportOptions, type Transport } from "./types.ts";
 

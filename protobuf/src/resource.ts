@@ -1,7 +1,7 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { invalid } from "@the-protobuf-project/errors";
+import { invalid } from "@the-protobuf-project/runtime-ts/errors";
 
 /** Formats, parses and checks names of one google.api.resource pattern. */
 export interface ResourceName<V extends string, N extends string> {

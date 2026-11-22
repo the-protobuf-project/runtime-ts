@@ -1,7 +1,7 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import type { JsonValue } from "@the-protobuf-project/protobuf";
+import type { JsonValue } from "@the-protobuf-project/runtime-ts/protobuf";
 
 /** What a replayed call does: return its logged result, or run again. */
 export type Replay = "log" | "reexecute";

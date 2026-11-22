@@ -1,8 +1,8 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import type { JsonObject, JsonValue } from "@the-protobuf-project/protobuf";
-import { invalid } from "@the-protobuf-project/errors";
+import type { JsonObject, JsonValue } from "@the-protobuf-project/runtime-ts/protobuf";
+import { invalid } from "@the-protobuf-project/runtime-ts/errors";
 
 const variable = /\{([a-zA-Z0-9_.]+)(?:=([^}]*))?\}/g;
 

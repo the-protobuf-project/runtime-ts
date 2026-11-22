@@ -1,8 +1,8 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { StatusError, codeFromConnect, codeFromHttpStatus } from "@the-protobuf-project/errors";
-import { BinaryReader } from "@the-protobuf-project/protobuf";
+import { StatusError, codeFromConnect, codeFromHttpStatus } from "@the-protobuf-project/runtime-ts/errors";
+import { BinaryReader } from "@the-protobuf-project/runtime-ts/protobuf";
 import { callHeaders, callSignal, type FetchTransportOptions, type Transport } from "./types.ts";
 
 /** Options for the Connect transport. */

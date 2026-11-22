@@ -5,4 +5,4 @@
 /.github/CODEOWNERS        @the-protobuf-project/infra-devops
 
 package.json               @the-protobuf-project/infra-devops
-package-lock.json          @the-protobuf-project/infra-devops
+bun.lock                   @the-protobuf-project/infra-devops

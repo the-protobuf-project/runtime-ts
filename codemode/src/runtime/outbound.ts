@@ -1,7 +1,7 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { StatusError } from "@the-protobuf-project/errors";
+import { StatusError } from "@the-protobuf-project/runtime-ts/errors";
 
 /** What sandboxed fetch() sends to the host. */
 export interface OutboundRequest {

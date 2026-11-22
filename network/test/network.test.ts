@@ -6,8 +6,8 @@ import { test } from "node:test";
 import {
   connectHandler, connectTransport, httpTransport, type Fetch, type MethodDescriptor,
 } from "../src/index.ts";
-import { StructCodec, type JsonObject } from "@the-protobuf-project/protobuf";
-import { StatusError } from "@the-protobuf-project/errors";
+import { StructCodec, type JsonObject } from "@the-protobuf-project/runtime-ts/protobuf";
+import { StatusError } from "@the-protobuf-project/runtime-ts/errors";
 
 const createBook: MethodDescriptor<JsonObject, JsonObject> = {
   service: "library.v1.LibraryService",
