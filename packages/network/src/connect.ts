@@ -3,19 +3,32 @@
 
 import { codeFromConnect, codeFromHttpStatus, StatusError } from "@the-protobuf-project/errors";
 import { BinaryReader } from "@the-protobuf-project/protobuf";
-import { callHeaders, callSignal, type FetchTransportOptions, type Transport } from "./types.ts";
+import { bidiStream, clientStream, serverStream } from "./connect_stream.ts";
+import { callHeaders, callSignal, type Duplex, type FetchTransportOptions, type Transport } from "./types.ts";
 
 /** Options for the Connect transport. */
 export interface ConnectTransportOptions extends FetchTransportOptions {
   /** "json" (default) or "binary" (application/proto). */
   format?: "json" | "binary";
+  /**
+   * A full-duplex connection for bidi streaming, which fetch cannot make: `http2Duplex()`
+   * from `@the-protobuf-project/network/node` in Bun, Node and Deno.
+   */
+  duplex?: Duplex;
 }
 
+/** A Connect transport, which always has the streaming calls. */
+export type ConnectTransport = Required<Transport>;
+
 /**
- * Calls RPCs with the Connect protocol's unary requests: a POST to
- * /<package.Service>/<Method>. Works with connect-go, connect-es and Envoy.
+ * Calls RPCs with the Connect protocol: a POST to /<package.Service>/<Method>. Works with
+ * connect-go, connect-es, Envoy, and the Go and Rust HybridServers' Connect surface.
+ *
+ * Unary and server-streaming calls use fetch, so they work everywhere, browsers and Workers
+ * included. Client streaming sends its requests in a streamed fetch body, then reads the
+ * reply. Bidi needs `duplex`, a full-duplex connection.
  */
-export function connectTransport(options: ConnectTransportOptions): Transport {
+export function connectTransport(options: ConnectTransportOptions): ConnectTransport {
   const doFetch = options.fetch ?? ((input, init) => globalThis.fetch(input, init));
   const base = options.baseUrl.replace(/\/+$/, "");
   const binary = options.format === "binary";
@@ -41,6 +54,9 @@ export function connectTransport(options: ConnectTransportOptions): Transport {
       const text = await response.text();
       return method.output.fromJson(text ? JSON.parse(text) : {});
     },
+    serverStream: (method, request, callOptions) => serverStream(options, method, request, callOptions),
+    clientStream: (method, requests, callOptions) => clientStream(options, method, requests, callOptions),
+    bidiStream: (method, requests, callOptions) => bidiStream(options, method, requests, callOptions),
   };
 }
 
