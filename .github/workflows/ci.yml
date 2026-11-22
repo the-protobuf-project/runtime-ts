@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test (${{ matrix.runtime }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        runtime: [node, bun, deno]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - uses: oven-sh/setup-bun@v2
+        if: matrix.runtime == 'bun'
+      # Every job installs Deno: the Deno sandbox tests run under all three runtimes.
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: npm ci
+      - name: Type-check, build and line limit
+        if: matrix.runtime == 'node'
+        run: |
+          npm run typecheck
+          npm run build
+          npm run lint:lines
+      - name: Test on Node
+        if: matrix.runtime == 'node'
+        run: npm test
+      - name: Test on Bun
+        if: matrix.runtime == 'bun'
+        run: npm run test:bun
+      - name: Test on Deno
+        if: matrix.runtime == 'deno'
+        run: npm run test:deno

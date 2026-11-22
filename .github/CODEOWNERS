@@ -1,0 +1,8 @@
+# Dependency manifests and CI/CD are owned by Infra & Devops.
+
+/.github/workflows/        @the-protobuf-project/infra-devops
+/.github/dependabot.yml    @the-protobuf-project/infra-devops
+/.github/CODEOWNERS        @the-protobuf-project/infra-devops
+
+package.json               @the-protobuf-project/infra-devops
+package-lock.json          @the-protobuf-project/infra-devops
