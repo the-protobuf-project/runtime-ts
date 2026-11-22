@@ -15,9 +15,15 @@
     "test:node": "tsc -b && node --test \"packages/*/test/**/*.test.ts\"",
     "test:deno": "tsc -b && deno test --no-check --allow-read --allow-env --allow-run packages/",
     "lint:lines": "./scripts/check-lines.sh",
-    "clean": "rm -rf packages/*/dist"
+    "clean": "rm -rf packages/*/dist",
+    "lint": "biome ci .",
+    "format": "biome check --write .",
+    "docs": "tsc -b && bun tools/docgen.ts",
+    "docs:check": "tsc -b && bun tools/docgen.ts --check",
+    "check": "bun run lint && bun run typecheck && bun run docs:check && bun run lint:lines"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.6.8",
     "@modelcontextprotocol/sdk": "^1.32.2",
     "@types/bun": "^1.4.5",
     "@types/node": "^26.6.6",

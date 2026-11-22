@@ -1,8 +1,8 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import type { JsonObject, JsonValue } from "@the-protobuf-project/runtime-ts-protobuf";
-import { StatusError, codeFromHttpStatus, codeFromNumber, isCode } from "@the-protobuf-project/runtime-ts-errors";
+import { codeFromHttpStatus, codeFromNumber, isCode, StatusError } from "@the-protobuf-project/errors";
+import type { JsonObject, JsonValue } from "@the-protobuf-project/protobuf";
 import { deletePath, expandPath, getPath, jsonPath, toQuery } from "./path_template.ts";
 import { callHeaders, callSignal, type FetchTransportOptions, type Transport } from "./types.ts";
 
@@ -64,17 +64,19 @@ export function httpError(status: number, text: string): StatusError {
   } catch {
     // Not JSON: keep the HTTP status and raw text.
   }
-  const inner = (parsed["error"] && typeof parsed["error"] === "object" ? parsed["error"] : parsed) as Record<string, unknown>;
-  const statusName = inner["status"];
+  const inner = (parsed.error && typeof parsed.error === "object" ? parsed.error : parsed) as Record<string, unknown>;
+  const statusName = inner.status;
   const code = isCode(statusName)
     ? statusName
-    : typeof inner["code"] === "number" && inner["code"] < 17
-      ? codeFromNumber(inner["code"])
+    : typeof inner.code === "number" && inner.code < 17
+      ? codeFromNumber(inner.code)
       : codeFromHttpStatus(status);
-  const message = typeof inner["message"] === "string" ? inner["message"] : text || `HTTP ${status}`;
-  const details = Array.isArray(inner["details"]) ? (inner["details"] as unknown[]) : undefined;
-  const info = details?.find((d) => (d as Record<string, unknown>)?.["@type"]?.toString().endsWith("google.rpc.ErrorInfo"));
-  const reason = (info as Record<string, unknown> | undefined)?.["reason"];
+  const message = typeof inner.message === "string" ? inner.message : text || `HTTP ${status}`;
+  const details = Array.isArray(inner.details) ? (inner.details as unknown[]) : undefined;
+  const info = details?.find((d) =>
+    (d as Record<string, unknown>)?.["@type"]?.toString().endsWith("google.rpc.ErrorInfo"),
+  );
+  const reason = (info as Record<string, unknown> | undefined)?.reason;
   return new StatusError(code, message, {
     ...(typeof reason === "string" ? { reason } : {}),
     ...(details ? { details } : {}),

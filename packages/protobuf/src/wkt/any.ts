@@ -1,10 +1,10 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
+import { invalid } from "@the-protobuf-project/errors";
 import { protojson } from "../protojson.ts";
-import type { JsonObject, JsonValue, MessageCodec } from "../types.ts";
-import { invalid } from "@the-protobuf-project/runtime-ts-errors";
 import { lookupType } from "../registry.ts";
+import type { JsonObject, JsonValue, MessageCodec } from "../types.ts";
 import { BinaryReader } from "../wire/reader.ts";
 import { BinaryWriter, WireType } from "../wire/writer.ts";
 
@@ -16,11 +16,21 @@ export interface AnyMessage {
 
 /** Well-known types whose protojson is not an object nest under "value". */
 const nested = new Set([
-  "google.protobuf.Timestamp", "google.protobuf.Duration", "google.protobuf.FieldMask",
-  "google.protobuf.Struct", "google.protobuf.Value", "google.protobuf.ListValue",
-  "google.protobuf.DoubleValue", "google.protobuf.FloatValue", "google.protobuf.Int64Value",
-  "google.protobuf.UInt64Value", "google.protobuf.Int32Value", "google.protobuf.UInt32Value",
-  "google.protobuf.BoolValue", "google.protobuf.StringValue", "google.protobuf.BytesValue",
+  "google.protobuf.Timestamp",
+  "google.protobuf.Duration",
+  "google.protobuf.FieldMask",
+  "google.protobuf.Struct",
+  "google.protobuf.Value",
+  "google.protobuf.ListValue",
+  "google.protobuf.DoubleValue",
+  "google.protobuf.FloatValue",
+  "google.protobuf.Int64Value",
+  "google.protobuf.UInt64Value",
+  "google.protobuf.Int32Value",
+  "google.protobuf.UInt32Value",
+  "google.protobuf.BoolValue",
+  "google.protobuf.StringValue",
+  "google.protobuf.BytesValue",
   "google.protobuf.Any",
 ]);
 
@@ -45,7 +55,7 @@ export const AnyCodec: MessageCodec<AnyMessage> = {
     const url = message["@type"];
     const codec = codecFor(url, "google.protobuf.Any");
     const { "@type": _, ...fields } = message;
-    const inner = nested.has(codec.typeName) ? fields["value"] : fields;
+    const inner = nested.has(codec.typeName) ? fields.value : fields;
     writer.tag(1, WireType.LengthDelimited).string(url);
     writer.tag(2, WireType.LengthDelimited).bytes(codec.encode(codec.fromJson(inner)).finish());
     return writer;
@@ -74,7 +84,10 @@ export type Empty = Record<string, never>;
 /** google.protobuf.Empty as `{}`. */
 export const EmptyCodec: MessageCodec<Empty> = {
   typeName: "google.protobuf.Empty",
-  fromJson: (json, path = "google.protobuf.Empty") => (protojson.object(json, path), {}),
+  fromJson(json, path = "google.protobuf.Empty") {
+    protojson.object(json, path);
+    return {};
+  },
   toJson: () => ({}),
   encode: (_message, writer = new BinaryWriter()) => writer,
   decode(input, length) {

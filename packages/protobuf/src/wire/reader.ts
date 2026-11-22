@@ -1,7 +1,7 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { StatusError } from "@the-protobuf-project/runtime-ts-errors";
+import { StatusError } from "@the-protobuf-project/errors";
 import { WireType } from "./writer.ts";
 
 const decoder = new TextDecoder("utf-8", { fatal: true });

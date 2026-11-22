@@ -1,11 +1,11 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
+import { StatusError } from "@the-protobuf-project/errors";
 import { describe, search } from "../catalog/search.ts";
-import { StatusError } from "@the-protobuf-project/runtime-ts-errors";
 import { buildScript } from "../executor/prelude.ts";
 import type { HostCall } from "../executor/types.ts";
-import { outboundFetch, type OutboundRequest } from "./outbound.ts";
+import { type OutboundRequest, outboundFetch } from "./outbound.ts";
 import type { RuntimeState } from "./state.ts";
 import type { Execution, LogEntry } from "./types.ts";
 import { checkSize, deserializeError, serializeError, stableJson } from "./values.ts";
@@ -18,7 +18,7 @@ class Stop {
   }
 }
 
-const never = (): Promise<string> => new Promise<string>(() => {});
+const never = (): Promise<string> => new Promise<string>(() => undefined);
 const maxLogLines = 500;
 
 function record(exec: Execution, entry: LogEntry): void {
@@ -51,15 +51,22 @@ export async function runPass(state: RuntimeState, exec: Execution): Promise<voi
     const entry = exec.log.find((e) => e.seq === s);
     if (entry) {
       if (entry.kind !== "call" || entry.path !== path || stableJson(entry.args) !== stableJson(args)) {
-        throw new Stop(`replay diverged at call ${s}: expected ${entry.path}, got ${path} with different arguments. ` +
-          "Call methods one at a time, in the same order, and record time or randomness with codemode.step().");
+        throw new Stop(
+          `replay diverged at call ${s}: expected ${entry.path}, got ${path} with different arguments. ` +
+            "Call methods one at a time, in the same order, and record time or randomness with codemode.step().",
+        );
       }
       if (entry.error) throw deserializeError(entry.error);
       if (target.method.replay === "log") return entry.result;
     }
     if (target.method.requiresApproval && !exec.approved.includes(s)) {
       exec.pending.push({
-        executionId: exec.id, seq: s, connector: target.namespace, method: target.method.name, path, args,
+        executionId: exec.id,
+        seq: s,
+        connector: target.namespace,
+        method: target.method.name,
+        path,
+        args,
         ...(target.method.approvalMessage ? { message: target.method.approvalMessage } : {}),
       });
       throw new Stop();
@@ -79,7 +86,8 @@ export async function runPass(state: RuntimeState, exec: Execution): Promise<voi
     const s = ++seq;
     const entry = exec.log.find((e) => e.seq === s);
     if (!entry) return { hit: false, seq: s };
-    if (entry.kind !== "step" || entry.path !== name) throw new Stop(`replay diverged at step ${s}: expected ${entry.path}, got ${name}`);
+    if (entry.kind !== "step" || entry.path !== name)
+      throw new Stop(`replay diverged at step ${s}: expected ${entry.path}, got ${name}`);
     return { hit: true, value: entry.result, seq: s };
   };
 
@@ -88,17 +96,22 @@ export async function runPass(state: RuntimeState, exec: Execution): Promise<voi
     try {
       const p = JSON.parse(payload) as Record<string, unknown>;
       let value: unknown = null;
-      if (op === "call") value = await call(String(p["path"]), p["args"]);
-      else if (op === "step") value = step(String(p["name"]));
+      if (op === "call") value = await call(String(p.path), p.args);
+      else if (op === "step") value = step(String(p.name));
       else if (op === "step.put") {
-        checkSize("step value", p["value"], max);
-        record(exec, { seq: Number(p["seq"]), kind: "step", path: String(p["name"]), result: p["value"] });
+        checkSize("step value", p.value, max);
+        record(exec, { seq: Number(p.seq), kind: "step", path: String(p.name), result: p.value });
       } else if (op === "fetch" && state.config.executor?.outbound === "allowlist") {
-        value = await outboundFetch(p as unknown as OutboundRequest, state.config.executor.allow ?? [], max, controller.signal);
-      } else if (op === "search") value = search(state.catalog, snippets, String(p["query"]));
-      else if (op === "describe") value = describe(state.catalog, snippets, String(p["target"]));
+        value = await outboundFetch(
+          p as unknown as OutboundRequest,
+          state.config.executor.allow ?? [],
+          max,
+          controller.signal,
+        );
+      } else if (op === "search") value = search(state.catalog, snippets, String(p.query));
+      else if (op === "describe") value = describe(state.catalog, snippets, String(p.target));
       else if (op === "log") {
-        if (exec.logs.length < maxLogLines) exec.logs.push(String(p["text"]));
+        if (exec.logs.length < maxLogLines) exec.logs.push(String(p.text));
       } else throw new StatusError("UNIMPLEMENTED", `unknown host operation ${op}`);
       return JSON.stringify({ value: value === undefined ? null : value });
     } catch (e) {
@@ -111,17 +124,33 @@ export async function runPass(state: RuntimeState, exec: Execution): Promise<voi
     }
   };
 
-  const script = buildScript({
-    namespaces: state.namespaceMethods(),
-    snippets: Object.fromEntries(snippets.map((s) => [s.name, s.code])),
-    outbound: state.config.executor?.outbound === "allowlist",
-  }, exec.code);
-  const res = await state.executor.execute({ script, host, timeoutMs: state.timeoutMs, memoryMb: state.memoryMb, signal: controller.signal });
+  const script = buildScript(
+    {
+      namespaces: state.namespaceMethods(),
+      snippets: Object.fromEntries(snippets.map((s) => [s.name, s.code])),
+      outbound: state.config.executor?.outbound === "allowlist",
+    },
+    exec.code,
+  );
+  const res = await state.executor.execute({
+    script,
+    host,
+    timeoutMs: state.timeoutMs,
+    memoryMb: state.memoryMb,
+    signal: controller.signal,
+  });
   exec.updatedAt = Date.now();
   if (fatal) return finish(exec, "error", fatal);
-  if (exec.pending.length > 0) return void (exec.status = "paused");
+  if (exec.pending.length > 0) {
+    exec.status = "paused";
+    return;
+  }
   if (!res.ok) return finish(exec, "error", res.error);
-  const out = JSON.parse(res.json) as { ok: boolean; value?: unknown; error?: { code?: string; name?: string; message?: string } };
+  const out = JSON.parse(res.json) as {
+    ok: boolean;
+    value?: unknown;
+    error?: { code?: string; name?: string; message?: string };
+  };
   if (!out.ok) {
     const e = out.error ?? {};
     return finish(exec, "error", `${e.code ?? e.name ?? "Error"}: ${e.message ?? ""}`);

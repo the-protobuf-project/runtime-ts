@@ -1,7 +1,7 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import type { MessageCodec } from "@the-protobuf-project/runtime-ts-protobuf";
+import type { MessageCodec } from "@the-protobuf-project/protobuf";
 
 /** A google.api.http binding. */
 export interface HttpRule {

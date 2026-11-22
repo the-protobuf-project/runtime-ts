@@ -69,7 +69,11 @@ export class RuntimeState {
   /** Method names per namespace, for the sandbox prelude. */
   namespaceMethods(): Record<string, string[]> {
     const out: Record<string, string[]> = {};
-    for (const [path, b] of this.methods) (out[b.namespace] ??= []).push(path.slice(b.namespace.length + 1));
+    for (const [path, b] of this.methods) {
+      const list = out[b.namespace] ?? [];
+      list.push(path.slice(b.namespace.length + 1));
+      out[b.namespace] = list;
+    }
     return out;
   }
 

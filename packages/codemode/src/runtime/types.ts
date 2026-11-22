@@ -1,7 +1,7 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Code } from "@the-protobuf-project/runtime-ts-errors";
+import type { Code } from "@the-protobuf-project/errors";
 
 /** Where an execution is in its life. */
 export type ExecutionStatus = "running" | "paused" | "completed" | "error" | "rejected" | "rolled_back";

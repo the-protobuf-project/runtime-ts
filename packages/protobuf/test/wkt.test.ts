@@ -4,8 +4,19 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
-  AnyCodec, DurationCodec, FieldMaskCodec, Int64ValueCodec, StringValueCodec, StructCodec, TimestampCodec, ValueCodec,
-  fromBinary, protojson, registerTypes, toBinary, type MessageCodec,
+  AnyCodec,
+  DurationCodec,
+  FieldMaskCodec,
+  fromBinary,
+  Int64ValueCodec,
+  type MessageCodec,
+  protojson,
+  registerTypes,
+  StringValueCodec,
+  StructCodec,
+  TimestampCodec,
+  toBinary,
+  ValueCodec,
 } from "../src/index.ts";
 
 function roundTrip<T>(codec: MessageCodec<T>, value: T): T {
@@ -49,7 +60,9 @@ test("Any packs registered types, nesting well-known ones under value", () => {
   registerTypes([TimestampCodec]);
   const ts = { "@type": "type.googleapis.com/google.protobuf.Timestamp", value: "2026-01-01T00:00:00Z" };
   assert.deepEqual(roundTrip(AnyCodec, ts), ts);
-  assert.throws(() => toBinary(AnyCodec, { "@type": "type.googleapis.com/unknown.Type" }), { code: "INVALID_ARGUMENT" });
+  assert.throws(() => toBinary(AnyCodec, { "@type": "type.googleapis.com/unknown.Type" }), {
+    code: "INVALID_ARGUMENT",
+  });
 });
 
 test("protojson readers validate and report the path", () => {

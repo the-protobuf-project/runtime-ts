@@ -3,36 +3,81 @@
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { CodemodeRuntime, connector, unaryMethod, type Catalog, type CodemodeConfig, type Hooks } from "../src/index.ts";
-import { StructCodec } from "@the-protobuf-project/runtime-ts-protobuf";
+import { StructCodec } from "@the-protobuf-project/protobuf";
+import {
+  type Catalog,
+  type CodemodeConfig,
+  CodemodeRuntime,
+  connector,
+  type Hooks,
+  unaryMethod,
+} from "../src/index.ts";
 import { QuickJSExecutor } from "../src/quickjs/index.ts";
 
 const catalog: Catalog = {
   prelude: "",
   types: {},
-  namespaces: [{ name: "kv", service: "kv.v1.Kv", instructions: "A key-value store.", declaration: "", methods: ["kv.get", "kv.put", "kv.wipe"] }],
+  namespaces: [
+    {
+      name: "kv",
+      service: "kv.v1.Kv",
+      instructions: "A key-value store.",
+      declaration: "",
+      methods: ["kv.get", "kv.put", "kv.wipe"],
+    },
+  ],
   methods: ["get", "put", "wipe"].map((name) => ({
-    path: `kv.${name}`, namespace: "kv", name, rpc: `kv.v1.Kv.${name}`, description: `${name} a key`,
-    requiresApproval: name === "wipe", replay: name === "get" ? "reexecute" : "log", readOnly: name === "get",
-    declaration: `  /** ${name} */\n  ${name}(input: object): Promise<object>;\n`, types: [], examples: [],
+    path: `kv.${name}`,
+    namespace: "kv",
+    name,
+    rpc: `kv.v1.Kv.${name}`,
+    description: `${name} a key`,
+    requiresApproval: name === "wipe",
+    replay: name === "get" ? "reexecute" : "log",
+    readOnly: name === "get",
+    declaration: `  /** ${name} */\n  ${name}(input: object): Promise<object>;\n`,
+    types: [],
+    examples: [],
   })),
   snippets: [],
 };
 
-function setup(config: CodemodeConfig = {}, options: { approval?: Record<string, boolean>; exclude?: string[]; hooks?: Hooks } = {}) {
+function setup(
+  config: CodemodeConfig = {},
+  options: { approval?: Record<string, boolean>; exclude?: string[]; hooks?: Hooks } = {},
+) {
   const data = new Map<string, unknown>();
   const method = (name: string, requiresApproval: boolean, fn: (r: Record<string, unknown>) => unknown) =>
-    unaryMethod({ name, input: StructCodec, output: StructCodec, requiresApproval, replay: "log", call: async (r) => fn(r) as never });
-  const kv = connector({
-    namespace: "kv",
-    methods: [
-      method("get", false, (r) => ({ value: data.get(String(r["key"])) ?? null })),
-      method("put", false, (r) => (data.set(String(r["key"]), r["value"]), {})),
-      method("wipe", true, () => (data.clear(), {})),
-    ],
-  }, options);
+    unaryMethod({
+      name,
+      input: StructCodec,
+      output: StructCodec,
+      requiresApproval,
+      replay: "log",
+      call: async (r) => fn(r) as never,
+    });
+  const kv = connector(
+    {
+      namespace: "kv",
+      methods: [
+        method("get", false, (r) => ({ value: data.get(String(r.key)) ?? null })),
+        method("put", false, (r) => {
+          data.set(String(r.key), r.value);
+          return {};
+        }),
+        method("wipe", true, () => {
+          data.clear();
+          return {};
+        }),
+      ],
+    },
+    options,
+  );
   const runtime = new CodemodeRuntime({
-    catalog, connectors: [kv], executor: new QuickJSExecutor(), config,
+    catalog,
+    connectors: [kv],
+    executor: new QuickJSExecutor(),
+    config,
     ...(options.hooks ? { hooks: options.hooks } : {}),
   });
   return { runtime, data };
@@ -51,7 +96,15 @@ test("connector options override approval and hide methods", async () => {
 
 test("hooks see every pass end and one disposal", async () => {
   const seen: string[] = [];
-  const { runtime } = setup({}, { hooks: { onPassEnd: (_, s) => void seen.push(`pass:${s}`), disposeExecution: (_, s) => void seen.push(`dispose:${s}`) } });
+  const { runtime } = setup(
+    {},
+    {
+      hooks: {
+        onPassEnd: (_, s) => void seen.push(`pass:${s}`),
+        disposeExecution: (_, s) => void seen.push(`dispose:${s}`),
+      },
+    },
+  );
   const out = await runtime.execute({ code: `await kv.wipe({}); return 1;` });
   await runtime.approve({ executionId: out.executionId });
   assert.deepEqual(seen, ["pass:paused", "pass:completed", "dispose:completed"]);
@@ -68,7 +121,9 @@ test("expirePaused rejects stale approvals; prune keeps the newest finished runs
 
 test("oversized results are refused before they are recorded", async () => {
   const { runtime } = setup({ runtime: { maxValueBytes: 50 } });
-  const out = await runtime.execute({ code: `try { await kv.put({ key: "k", value: "${"x".repeat(100)}" }); } catch (e) { return e.code; }` });
+  const out = await runtime.execute({
+    code: `try { await kv.put({ key: "k", value: "${"x".repeat(100)}" }); } catch (e) { return e.code; }`,
+  });
   assert.deepEqual(out.status === "completed" && out.result, "RESOURCE_EXHAUSTED");
 });
 
@@ -85,7 +140,10 @@ test("fetch is absent by default and allowlisted when configured", async () => {
 
   const real = globalThis.fetch;
   let calls = 0;
-  globalThis.fetch = (async () => (calls++, new Response('{"ok":1}', { status: 200 }))) as typeof fetch;
+  globalThis.fetch = (async () => {
+    calls++;
+    return new Response('{"ok":1}', { status: 200 });
+  }) as typeof fetch;
   try {
     const open = setup({ executor: { outbound: "allowlist", allow: ["*.example.com"] } });
     const code = `async () => {

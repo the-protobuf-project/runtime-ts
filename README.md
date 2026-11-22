@@ -28,24 +28,24 @@ Each folder in [`packages/`](packages) is its own npm package with its own
 `package.json`, `tsconfig.json`, `src/` and `dist/`, built and published on its
 own, like the modules of runtime-go. Packages depend on each other by name.
 
-| Package | What it does | Generated against it by |
-| --- | --- | --- |
-| [`@the-protobuf-project/runtime-ts-errors`](packages/errors) | `StatusError` with gRPC codes, and mapping from HTTP and Connect | |
-| [`@the-protobuf-project/runtime-ts-protobuf`](packages/protobuf) | Binary wire format, protojson, well-known types, enums, resource names, the `Any` registry | every TypeScript plugin |
-| [`@the-protobuf-project/runtime-ts-network`](packages/network) | `google.api.http` transcoding and Connect clients, a Connect server handler, the `Transport` interface | every TypeScript plugin |
-| [`@the-protobuf-project/runtime-ts-codemode`](packages/codemode) | Code Mode: executions, approvals, replay, rollback, snippets, search, stores | [protoc-gen-codemode](https://github.com/the-protobuf-project/codemode) |
+| Package                                               | What it does                                                                                           | Generated against it by                                                 |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| [`@the-protobuf-project/errors`](packages/errors)     | `StatusError` with gRPC codes, and mapping from HTTP and Connect                                       |                                                                         |
+| [`@the-protobuf-project/protobuf`](packages/protobuf) | Binary wire format, protojson, well-known types, enums, resource names, the `Any` registry             | every TypeScript plugin                                                 |
+| [`@the-protobuf-project/network`](packages/network)   | `google.api.http` transcoding and Connect clients, a Connect server handler, the `Transport` interface | every TypeScript plugin                                                 |
+| [`@the-protobuf-project/codemode`](packages/codemode) | Code Mode: executions, approvals, replay, rollback, snippets, search, stores                           | [protoc-gen-codemode](https://github.com/the-protobuf-project/codemode) |
 
 Code Mode has a subpath per sandbox and surface, so their dependencies stay
 optional; install the ones you use:
 
-| Import | What it adds | Needs |
-| --- | --- | --- |
-| `runtime-ts-codemode/quickjs` | Sandbox: QuickJS in WebAssembly (Bun, Node, Deno, browsers) | `quickjs-emscripten` |
-| `runtime-ts-codemode/deno` | Sandbox: a Deno process with every permission denied | a `deno` binary |
-| `runtime-ts-codemode/cloudflare` | Sandbox: a Worker Loader isolate; Durable Object storage | Cloudflare Workers |
-| `runtime-ts-codemode/browser` | Sandbox: a sandboxed iframe | a browser |
-| `runtime-ts-codemode/mcp` | Serve a runtime as an MCP server | `@modelcontextprotocol/sdk` |
-| `runtime-ts-codemode/ai` | The Code Mode tool for the Vercel AI SDK | `ai` |
+| Import                | What it adds                                                | Needs                       |
+| --------------------- | ----------------------------------------------------------- | --------------------------- |
+| `codemode/quickjs`    | Sandbox: QuickJS in WebAssembly (Bun, Node, Deno, browsers) | `quickjs-emscripten`        |
+| `codemode/deno`       | Sandbox: a Deno process with every permission denied        | a `deno` binary             |
+| `codemode/cloudflare` | Sandbox: a Worker Loader isolate; Durable Object storage    | Cloudflare Workers          |
+| `codemode/browser`    | Sandbox: a sandboxed iframe                                 | a browser                   |
+| `codemode/mcp`        | Serve a runtime as an MCP server                            | `@modelcontextprotocol/sdk` |
+| `codemode/ai`         | The Code Mode tool for the Vercel AI SDK                    | `ai`                        |
 
 ## Install
 
@@ -64,8 +64,8 @@ after `gh auth refresh -s read:packages`, or the workflow's `GITHUB_TOKEN` in
 Actions):
 
 ```sh
-bun add @the-protobuf-project/runtime-ts-codemode @the-protobuf-project/runtime-ts-network
-bun add quickjs-emscripten            # for runtime-ts-codemode/quickjs
+bun add @the-protobuf-project/codemode @the-protobuf-project/network
+bun add quickjs-emscripten            # for codemode/quickjs
 ```
 
 Bun runs the TypeScript sources directly through the `bun` export condition;
@@ -74,13 +74,18 @@ Node and Deno use the compiled `dist/`.
 ## Example
 
 ```ts
-import { createCodemode } from "@the-protobuf-project/runtime-ts-codemode";
-import { QuickJSExecutor } from "@the-protobuf-project/runtime-ts-codemode/quickjs";
-import { httpTransport } from "@the-protobuf-project/runtime-ts-network";
+import { createCodemode } from "@the-protobuf-project/codemode";
+import { QuickJSExecutor } from "@the-protobuf-project/codemode/quickjs";
+import { httpTransport } from "@the-protobuf-project/network";
 import { catalog, config, connectors, libraryV1 } from "./gen/index.ts";
 
 const client = new libraryV1.LibraryServiceClient(httpTransport({ baseUrl: "https://library.example.com" }));
-const runtime = createCodemode({ catalog, config, connectors: connectors({ library: client }), executor: new QuickJSExecutor() });
+const runtime = createCodemode({
+  catalog,
+  config,
+  connectors: connectors({ library: client }),
+  executor: new QuickJSExecutor(),
+});
 
 await runtime.execute({ code: `async () => (await library.listBooks({ parent: "shelves/poetry" })).books.length` });
 ```

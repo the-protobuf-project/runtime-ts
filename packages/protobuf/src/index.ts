@@ -5,21 +5,28 @@
 // well-known types, enums, resource names and the type registry. Generated
 // messages are built on these.
 
-export { binary, fromBinary, fromJsonString, toBinary, toJsonString, type ValueReader } from "./binary.ts";
 export { decodeBase64, encodeBase64 } from "./base64.ts";
+export { binary, fromBinary, fromJsonString, toBinary, toJsonString, type ValueReader } from "./binary.ts";
 export { enumCodec } from "./enum.ts";
-export { protojson, type JsonReader } from "./protojson.ts";
-export { resourceName, type ResourceName } from "./resource.ts";
-export type { EnumCodec, JsonObject, JsonValue, MessageCodec, MessageOf, ToJsonOptions } from "./types.ts";
+export { type JsonReader, protojson } from "./protojson.ts";
 export { lookupType, registerTypes } from "./registry.ts";
+export { type ResourceName, resourceName } from "./resource.ts";
+export type { EnumCodec, JsonObject, JsonValue, MessageCodec, MessageOf, ToJsonOptions } from "./types.ts";
 export { BinaryReader } from "./wire/reader.ts";
-export { BinaryWriter, WireType, type Int64Input } from "./wire/writer.ts";
+export { BinaryWriter, type Int64Input, WireType } from "./wire/writer.ts";
 
-export { AnyCodec, EmptyCodec, type AnyMessage, type Empty } from "./wkt/any.ts";
+export { AnyCodec, type AnyMessage, type Empty, EmptyCodec } from "./wkt/any.ts";
 export { FieldMaskCodec } from "./wkt/field_mask.ts";
 export { ListValueCodec, StructCodec, ValueCodec } from "./wkt/struct.ts";
 export { DurationCodec, TimestampCodec } from "./wkt/time.ts";
 export {
-  BoolValueCodec, BytesValueCodec, DoubleValueCodec, FloatValueCodec, Int32ValueCodec,
-  Int64ValueCodec, StringValueCodec, UInt32ValueCodec, UInt64ValueCodec,
+  BoolValueCodec,
+  BytesValueCodec,
+  DoubleValueCodec,
+  FloatValueCodec,
+  Int32ValueCodec,
+  Int64ValueCodec,
+  StringValueCodec,
+  UInt32ValueCodec,
+  UInt64ValueCodec,
 } from "./wkt/wrappers.ts";

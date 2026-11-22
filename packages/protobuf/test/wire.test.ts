@@ -3,11 +3,17 @@
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { BinaryReader, BinaryWriter, WireType, decodeBase64, encodeBase64 } from "../src/index.ts";
+import { BinaryReader, BinaryWriter, decodeBase64, encodeBase64, WireType } from "../src/index.ts";
 
 test("varints round-trip, including negatives and 64-bit values", () => {
   const w = new BinaryWriter();
-  w.uint32(0).uint32(300).int32(-1).sint32(-2).int64("-9223372036854775808").uint64("18446744073709551615").sint64("-3");
+  w.uint32(0)
+    .uint32(300)
+    .int32(-1)
+    .sint32(-2)
+    .int64("-9223372036854775808")
+    .uint64("18446744073709551615")
+    .sint64("-3");
   const r = new BinaryReader(w.finish());
   assert.equal(r.uint32(), 0);
   assert.equal(r.uint32(), 300);
@@ -24,7 +30,14 @@ test("negative int32 takes ten bytes, as protobuf requires", () => {
 });
 
 test("fixed-width and floating values round-trip", () => {
-  const w = new BinaryWriter().fixed32(4294967295).sfixed32(-5).fixed64("123").sfixed64("-123").float(1.5).double(Math.PI).bool(true);
+  const w = new BinaryWriter()
+    .fixed32(4294967295)
+    .sfixed32(-5)
+    .fixed64("123")
+    .sfixed64("-123")
+    .float(1.5)
+    .double(Math.PI)
+    .bool(true);
   const r = new BinaryReader(w.finish());
   assert.equal(r.fixed32(), 4294967295);
   assert.equal(r.sfixed32(), -5);
@@ -51,11 +64,16 @@ test("fork and join nest length-delimited sections", () => {
 
 test("skip passes over every wire type", () => {
   const w = new BinaryWriter()
-    .tag(1, WireType.Varint).uint32(1)
-    .tag(2, WireType.Fixed64).double(1)
-    .tag(3, WireType.LengthDelimited).string("x")
-    .tag(4, WireType.Fixed32).float(1)
-    .tag(5, WireType.Varint).uint32(42);
+    .tag(1, WireType.Varint)
+    .uint32(1)
+    .tag(2, WireType.Fixed64)
+    .double(1)
+    .tag(3, WireType.LengthDelimited)
+    .string("x")
+    .tag(4, WireType.Fixed32)
+    .float(1)
+    .tag(5, WireType.Varint)
+    .uint32(42);
   const r = new BinaryReader(w.finish());
   for (let i = 0; i < 4; i++) {
     const [no, wt] = r.tag();

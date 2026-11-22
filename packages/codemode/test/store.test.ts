@@ -3,10 +3,21 @@
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { MemoryStore, SqliteStore, type Execution, type SqliteDatabase, type Store } from "../src/index.ts";
+import { type Execution, MemoryStore, type SqliteDatabase, SqliteStore, type Store } from "../src/index.ts";
 
 function execution(id: string, createdAt: number, status: Execution["status"] = "completed"): Execution {
-  return { id, code: "async () => 1", status, createdAt, updatedAt: createdAt, passes: 1, log: [], approved: [], pending: [], logs: [] };
+  return {
+    id,
+    code: "async () => 1",
+    status,
+    createdAt,
+    updatedAt: createdAt,
+    passes: 1,
+    log: [],
+    approved: [],
+    pending: [],
+    logs: [],
+  };
 }
 
 async function sqlite(): Promise<SqliteDatabase | undefined> {
@@ -37,8 +48,14 @@ for (const [name, make, skip] of stores) {
     const updated = { ...execution("a", 1, "rolled_back"), result: { n: 1 } };
     await store.putExecution(updated);
     assert.deepEqual(await store.getExecution("a"), updated);
-    assert.deepEqual((await store.listExecutions()).map((e) => e.id), ["b", "a"]);
-    assert.deepEqual((await store.listExecutions(1)).map((e) => e.id), ["b"]);
+    assert.deepEqual(
+      (await store.listExecutions()).map((e) => e.id),
+      ["b", "a"],
+    );
+    assert.deepEqual(
+      (await store.listExecutions(1)).map((e) => e.id),
+      ["b"],
+    );
     assert.equal(await store.deleteExecution("a"), true);
     assert.equal(await store.deleteExecution("a"), false);
     assert.equal(await store.getExecution("a"), undefined);
@@ -48,7 +65,10 @@ for (const [name, make, skip] of stores) {
     const store = make();
     await store.putSnippet({ name: "z", code: "async () => 1", source: "saved", createdAt: 1 });
     await store.putSnippet({ name: "a", code: "async () => 2", source: "proto", createdAt: 1 });
-    assert.deepEqual((await store.listSnippets()).map((s) => s.name), ["a", "z"]);
+    assert.deepEqual(
+      (await store.listSnippets()).map((s) => s.name),
+      ["a", "z"],
+    );
     assert.equal((await store.getSnippet("z"))?.code, "async () => 1");
     assert.equal(await store.deleteSnippet("z"), true);
     assert.equal(await store.getSnippet("z"), undefined);
