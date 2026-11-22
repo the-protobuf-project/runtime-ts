@@ -29,51 +29,61 @@
     "./package.json": "./package.json",
     "./errors": {
       "source": "./errors/src/index.ts",
+      "bun": "./errors/src/index.ts",
       "types": "./errors/dist/index.d.ts",
       "default": "./errors/dist/index.js"
     },
     "./protobuf": {
       "source": "./protobuf/src/index.ts",
+      "bun": "./protobuf/src/index.ts",
       "types": "./protobuf/dist/index.d.ts",
       "default": "./protobuf/dist/index.js"
     },
     "./network": {
       "source": "./network/src/index.ts",
+      "bun": "./network/src/index.ts",
       "types": "./network/dist/index.d.ts",
       "default": "./network/dist/index.js"
     },
     "./codemode": {
       "source": "./codemode/src/index.ts",
+      "bun": "./codemode/src/index.ts",
       "types": "./codemode/dist/index.d.ts",
       "default": "./codemode/dist/index.js"
     },
     "./codemode/quickjs": {
       "source": "./codemode/src/quickjs/index.ts",
+      "bun": "./codemode/src/quickjs/index.ts",
       "types": "./codemode/dist/quickjs/index.d.ts",
       "default": "./codemode/dist/quickjs/index.js"
     },
     "./codemode/deno": {
       "source": "./codemode/src/deno/index.ts",
+      "bun": "./codemode/src/deno/index.ts",
       "types": "./codemode/dist/deno/index.d.ts",
       "default": "./codemode/dist/deno/index.js"
     },
     "./codemode/cloudflare": {
       "source": "./codemode/src/cloudflare/index.ts",
+      "bun": "./codemode/src/cloudflare/index.ts",
       "types": "./codemode/dist/cloudflare/index.d.ts",
       "default": "./codemode/dist/cloudflare/index.js"
     },
     "./codemode/browser": {
       "source": "./codemode/src/browser/index.ts",
+      "bun": "./codemode/src/browser/index.ts",
       "types": "./codemode/dist/browser/index.d.ts",
       "default": "./codemode/dist/browser/index.js"
     },
     "./codemode/mcp": {
       "source": "./codemode/src/mcp/index.ts",
+      "bun": "./codemode/src/mcp/index.ts",
       "types": "./codemode/dist/mcp/index.d.ts",
       "default": "./codemode/dist/mcp/index.js"
     },
     "./codemode/ai": {
       "source": "./codemode/src/ai/index.ts",
+      "bun": "./codemode/src/ai/index.ts",
       "types": "./codemode/dist/ai/index.d.ts",
       "default": "./codemode/dist/ai/index.js"
     }

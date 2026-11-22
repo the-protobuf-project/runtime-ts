@@ -56,10 +56,9 @@ bun add github:the-protobuf-project/runtime-ts   # until the first npm release
 bun add quickjs-emscripten                       # for codemode/quickjs
 ```
 
-The package builds itself on install (`prepare`). Bun runs that only for
-trusted dependencies, so add it to `trustedDependencies` in your package.json:
-`"trustedDependencies": ["@the-protobuf-project/runtime-ts"]`. npm, pnpm and
-yarn run it without that.
+Bun runs the TypeScript sources directly, through the `bun` export condition,
+so nothing is built on install. npm, pnpm and yarn build `dist/` on install
+(`prepare`) for Node and Deno.
 
 ## Example
 
