@@ -6,6 +6,7 @@
 // surfaces live in their own entry points (codemode/quickjs, codemode/mcp, ...)
 // so their dependencies stay optional.
 
+export { mergeCatalogs } from "./catalog/merge.ts";
 export { type Description, describe, type SearchResult, type SearchResults, search } from "./catalog/search.ts";
 export type { Catalog, CatalogMethod, CatalogNamespace, CatalogSnippet, CodemodeConfig } from "./catalog/types.ts";
 export { type ConnectorSpec, connector, type UnaryMethodSpec, unaryMethod } from "./connector/connector.ts";

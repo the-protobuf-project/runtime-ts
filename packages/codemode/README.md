@@ -83,6 +83,55 @@ createMcpServer(runtime, {
 await runtime.approve({ executionId: p.executionId, seq: p.seq });
 ```
 
+### An API without protos: OpenAPI
+
+`openApiConnector` turns an OpenAPI 3.0 or 3.1 spec into a namespace, one typed
+method per operation, with response types where the spec has response schemas.
+
+```ts
+import { createCodemode, mergeCatalogs } from "@the-protobuf-project/codemode";
+import { openApiConnector } from "@the-protobuf-project/codemode/openapi";
+
+const billing = openApiConnector(Bun.YAML.parse(await Bun.file("billing.yaml").text()), {
+  namespace: "billing",
+  baseUrl: "https://billing.example.com",
+  headers: () => ({ authorization: `Bearer ${token()}` }), // stays in the host
+  approval: { searchInvoices: false }, // a read that happens to be a POST
+});
+for (const { operation, reason } of billing.skipped) console.warn(`not exposed: ${operation}: ${reason}`);
+
+const runtime = createCodemode({
+  catalog: mergeCatalogs(catalog, billing.catalog), // beside generated services, or alone
+  connectors: [...connectors(services), billing.connector],
+  executor,
+});
+```
+
+The sandbox calls `billing.getInvoice({ invoice: "42" })`: parameters are fields
+of one object and the request body is `body`.
+
+- **Approval:** every method but GET, HEAD and OPTIONS pauses for a person
+  unless `approval` says otherwise. An unknown name in `approval` or `exclude`
+  throws. Set `approval: { name: true }` on a GET that changes something.
+- **Destination:** requests go to `baseUrl` only. The spec's `servers` are
+  ignored, redirects are not followed, and path values cannot leave their
+  segment.
+- **Credentials:** auth headers, cookies, the spec's API-key parameters and
+  method-override parameters are never sandbox inputs. `headers` and `query`
+  win over the sandbox's values. Credentials a server echoes are redacted,
+  recognized by the spec's security schemes or by names like authorization,
+  token and api-key; an unusually named secret is not.
+- **Replay:** every result is logged, so a resumed script sees what it saw.
+- **Not exposed, listed in `skipped`:** multipart and binary request bodies,
+  event streams, operations with their own server, and repeats of an
+  operationId.
+- **Not checked:** argument types, beyond required and unknown fields; the
+  server validates them. Integers over 2^53 sent as JSON numbers lose
+  precision.
+
+Prefer generating from protos when there are protos: they also carry reverts,
+so rollback works. An OpenAPI method cannot be rolled back.
+
 ### Keep executions across restarts
 
 ```ts
@@ -151,6 +200,7 @@ Plus one global per service, such as `library`, typed by the generated
 
 | Export | Kind | Description |
 | --- | --- | --- |
+| `mergeCatalogs` | function | Joins catalogs, so generated services and OpenAPI APIs share one sandbox. |
 | `Description` | interface | TypeScript for one namespace, method or snippet. |
 | `describe` | function | Returns TypeScript for a namespace, a "namespace.method" path, or a snippet. |
 | `SearchResult` | interface | One search hit. |
@@ -250,6 +300,15 @@ Plus one global per service, such as `library`, typed by the generated
 | Export | Kind | Description |
 | --- | --- | --- |
 | `codemodeTool` | function | The codemode tool for the Vercel AI SDK. |
+
+### `@the-protobuf-project/codemode/openapi`
+
+| Export | Kind | Description |
+| --- | --- | --- |
+| `OpenApiConnectorOptions` | interface | Options for openApiConnector(). |
+| `OpenApiApi` | interface | What openApiConnector() returns: pass both halves to createCodemode(). |
+| `openApiConnector` | function | Turns an OpenAPI spec into a sandbox namespace with one method per operation, typed from its request and response schemas. |
+| `SkippedOperation` | interface | An operation the connector cannot call faithfully, and why. |
 
 <!-- api:end -->
 
