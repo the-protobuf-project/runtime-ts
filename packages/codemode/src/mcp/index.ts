@@ -20,6 +20,14 @@ export interface McpServerOptions {
   expose?: "code" | "search_execute";
   /** Ask the user through MCP elicitation when a call needs approval. Defaults to true. */
   elicitApproval?: boolean;
+  /**
+   * List codemode_approve and codemode_reject. Defaults to true. Set false so
+   * the model cannot approve its own calls: approval then comes only from
+   * elicitation or from your own surface calling runtime.approve().
+   */
+  approvalTools?: boolean;
+  /** Told to the model when an execution is left paused, e.g. where a person approves it. */
+  approvalHint?: string;
 }
 
 const executionId: Tool["inputSchema"] = {
@@ -31,7 +39,8 @@ const executionId: Tool["inputSchema"] = {
 /**
  * Publishes a Code Mode runtime as an MCP server. Paused executions are put
  * to the user through elicitation when the client supports it; otherwise
- * the client resumes them with codemode_approve or codemode_reject.
+ * the client resumes them with codemode_approve or codemode_reject, unless
+ * approvalTools is false. codemode_status reports how an execution ended.
  */
 export function createMcpServer(runtime: CodemodeRuntime, options: McpServerOptions = {}): Server {
   const server = new Server(
@@ -52,22 +61,30 @@ export function createMcpServer(runtime: CodemodeRuntime, options: McpServerOpti
           { name: "execute", description: codeTool.description, inputSchema: codeSchema },
         ]
       : [{ name: "code", description: codeTool.description, inputSchema: codeSchema }];
-  tools.push(
-    {
-      name: "codemode_approve",
-      description: "Approve the call a paused execution is waiting on, and resume it.",
-      inputSchema: executionId,
-    },
-    {
-      name: "codemode_reject",
-      description: "Reject the call a paused execution is waiting on, ending the execution.",
-      inputSchema: {
-        type: "object",
-        properties: { executionId: { type: "string" }, seq: { type: "number" } },
-        required: ["executionId", "seq"],
+  const approvalTools = options.approvalTools !== false;
+  tools.push({
+    name: "codemode_status",
+    description: "Report an execution's status and result, e.g. after a person approved it elsewhere.",
+    inputSchema: executionId,
+  });
+  if (approvalTools) {
+    tools.push(
+      {
+        name: "codemode_approve",
+        description: "Approve the call a paused execution is waiting on, and resume it.",
+        inputSchema: executionId,
       },
-    },
-  );
+      {
+        name: "codemode_reject",
+        description: "Reject the call a paused execution is waiting on, ending the execution.",
+        inputSchema: {
+          type: "object",
+          properties: { executionId: { type: "string" }, seq: { type: "number" } },
+          required: ["executionId", "seq"],
+        },
+      },
+    );
+  }
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools }));
   server.setRequestHandler(CallToolRequestSchema, async (request): Promise<CallToolResult> => {
@@ -81,11 +98,15 @@ export function createMcpServer(runtime: CodemodeRuntime, options: McpServerOpti
           return output(
             await settle(server, runtime, await runtime.execute({ code: String(args.code ?? "") }), options),
           );
+        case "codemode_status":
+          return output(await status(runtime, String(args.executionId)));
         case "codemode_approve":
+          if (!approvalTools) return refused(request.params.name);
           return output(
             await settle(server, runtime, await runtime.approve({ executionId: String(args.executionId) }), options),
           );
         case "codemode_reject":
+          if (!approvalTools) return refused(request.params.name);
           return json({
             rejected: await runtime.reject({ executionId: String(args.executionId), seq: Number(args.seq) }),
           });
@@ -130,7 +151,28 @@ async function settle(
       return { status: "error", executionId: current.executionId, error: `the user declined ${p.path}` };
     }
   }
+  if (current.status === "paused" && options.approvalHint) {
+    return { ...current, message: options.approvalHint } as CodeOutput;
+  }
   return current;
+}
+
+/** An execution as the code tool would have returned it. */
+async function status(runtime: CodemodeRuntime, id: string): Promise<CodeOutput> {
+  const exec = await runtime.getExecution(id);
+  if (!exec) return { status: "error", executionId: id, error: `no execution ${id}` };
+  switch (exec.status) {
+    case "completed":
+      return { status: "completed", executionId: id, result: exec.result };
+    case "paused":
+      return { status: "paused", executionId: id, pending: exec.pending };
+    default:
+      return { status: "error", executionId: id, error: exec.error ?? exec.status };
+  }
+}
+
+function refused(tool: string): CallToolResult {
+  return { content: [{ type: "text", text: `${tool} is disabled: a person approves calls` }], isError: true };
 }
 
 function json(value: unknown): CallToolResult {

@@ -69,6 +69,18 @@ await generateText({ model, prompt, tools: { codemode: codemodeTool(runtime) } }
 const tool = runtime.tool();
 ```
 
+Without elicitation, a paused execution goes back to the model with
+`codemode_approve` and `codemode_reject` tools, so the model could approve its
+own calls. Turn them off when a person must decide, and say where they do:
+
+```ts
+createMcpServer(runtime, {
+  approvalTools: false, // the model gets `code` and `codemode_status` only
+  approvalHint: "Ask the user to approve at http://127.0.0.1:4791, then call codemode_status.",
+});
+// your approval page or app calls runtime.pending() and runtime.approve({ executionId })
+```
+
 ### Keep executions across restarts
 
 ```ts
