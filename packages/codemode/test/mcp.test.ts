@@ -75,7 +75,12 @@ test("with approvalTools false the model cannot approve its own calls", async ()
 
   await runtime.approve({ executionId: paused.executionId });
   const done = await client.callTool({ name: "codemode_status", arguments: { executionId: paused.executionId } });
-  assert.deepEqual(done.structuredContent, { status: "completed", executionId: paused.executionId, result: "wiped" });
+  assert.deepEqual(done.structuredContent, {
+    status: "completed",
+    executionId: paused.executionId,
+    result: "wiped",
+    approved: [{ seq: 1, path: "kv.wipe", args: {} }],
+  });
 });
 
 test("approval tools stay listed by default", async () => {
