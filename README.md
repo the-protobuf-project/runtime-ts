@@ -103,6 +103,9 @@ bun run test           # Bun
 bun run test:node
 bun run test:deno      # CODEMODE_DENO=<deno binary> runs the Deno sandbox tests under Bun and Node too
 bun run lint:lines     # hand-written files stay under 200 lines
+bun run lint           # Biome: lint and format check (bun run format fixes)
+bun run docs           # regenerate each package README's API reference from doc comments
+bun run check          # everything CI checks before the tests
 ```
 
 ## Releasing

@@ -33,10 +33,12 @@ jobs:
         with:
           deno-version: v2.x
       - run: bun install --frozen-lockfile
-      - name: Type-check and line limit
+      - name: Lint, type-check, docs and line limit
         if: matrix.runtime == 'bun'
         run: |
+          bun run lint
           bun run typecheck
+          bun run docs:check
           bun run lint:lines
       - name: Test on Bun
         if: matrix.runtime == 'bun'
