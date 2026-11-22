@@ -1,100 +1,23 @@
 {
-  "name": "@the-protobuf-project/runtime",
-  "version": "0.1.0",
-  "description": "The TypeScript runtime underneath code generated from your .proto files: protobuf codecs, network clients and servers, and Code Mode.",
-  "license": "Apache-2.0",
+  "name": "runtime-ts",
+  "private": true,
   "type": "module",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/the-protobuf-project/runtime-ts.git"
-  },
-  "engines": {
-    "node": ">=22.18"
-  },
-  "files": [
-    "dist",
-    "src"
+  "description": "The TypeScript runtime underneath code generated from your .proto files.",
+  "license": "Apache-2.0",
+  "workspaces": [
+    "errors",
+    "protobuf",
+    "network",
+    "codemode"
   ],
-  "sideEffects": false,
-  "exports": {
-    "./errors": {
-      "source": "./src/errors/index.ts",
-      "types": "./dist/errors/index.d.ts",
-      "default": "./dist/errors/index.js"
-    },
-    "./protobuf": {
-      "source": "./src/protobuf/index.ts",
-      "types": "./dist/protobuf/index.d.ts",
-      "default": "./dist/protobuf/index.js"
-    },
-    "./network": {
-      "source": "./src/network/index.ts",
-      "types": "./dist/network/index.d.ts",
-      "default": "./dist/network/index.js"
-    },
-    "./codemode": {
-      "source": "./src/codemode/index.ts",
-      "types": "./dist/codemode/index.d.ts",
-      "default": "./dist/codemode/index.js"
-    },
-    "./codemode/quickjs": {
-      "source": "./src/codemode/quickjs/index.ts",
-      "types": "./dist/codemode/quickjs/index.d.ts",
-      "default": "./dist/codemode/quickjs/index.js"
-    },
-    "./codemode/deno": {
-      "source": "./src/codemode/deno/index.ts",
-      "types": "./dist/codemode/deno/index.d.ts",
-      "default": "./dist/codemode/deno/index.js"
-    },
-    "./codemode/cloudflare": {
-      "source": "./src/codemode/cloudflare/index.ts",
-      "types": "./dist/codemode/cloudflare/index.d.ts",
-      "default": "./dist/codemode/cloudflare/index.js"
-    },
-    "./codemode/browser": {
-      "source": "./src/codemode/browser/index.ts",
-      "types": "./dist/codemode/browser/index.d.ts",
-      "default": "./dist/codemode/browser/index.js"
-    },
-    "./codemode/mcp": {
-      "source": "./src/codemode/mcp/index.ts",
-      "types": "./dist/codemode/mcp/index.d.ts",
-      "default": "./dist/codemode/mcp/index.js"
-    },
-    "./codemode/ai": {
-      "source": "./src/codemode/ai/index.ts",
-      "types": "./dist/codemode/ai/index.d.ts",
-      "default": "./dist/codemode/ai/index.js"
-    }
-  },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "prepare": "tsc -p tsconfig.build.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --test \"test/**/*.test.ts\"",
-    "test:bun": "bun test ./test",
-    "test:deno": "deno test --no-check --allow-read --allow-env --allow-run test/",
-    "lint:lines": "./scripts/check-lines.sh"
-  },
-  "dependencies": {
-    "sucrase": "^3.35.1"
-  },
-  "peerDependencies": {
-    "@modelcontextprotocol/sdk": "^1.32.0",
-    "ai": "^7.0.0",
-    "quickjs-emscripten": "^0.32.0"
-  },
-  "peerDependenciesMeta": {
-    "@modelcontextprotocol/sdk": {
-      "optional": true
-    },
-    "ai": {
-      "optional": true
-    },
-    "quickjs-emscripten": {
-      "optional": true
-    }
+    "build": "tsc -b",
+    "typecheck": "tsc -b && tsc -p tsconfig.test.json",
+    "test": "tsc -b && npm test --workspaces",
+    "test:bun": "tsc -b && npm run test:bun --workspaces",
+    "test:deno": "tsc -b && npm run test:deno --workspaces",
+    "lint:lines": "./scripts/check-lines.sh",
+    "clean": "rm -rf */dist"
   },
   "devDependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",

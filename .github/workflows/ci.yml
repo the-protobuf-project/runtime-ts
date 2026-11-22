@@ -34,11 +34,12 @@ jobs:
         with:
           deno-version: v2.x
       - run: npm ci
-      - name: Type-check, build and line limit
+      - name: Build every package
+        run: npm run build
+      - name: Type-check tests and line limit
         if: matrix.runtime == 'node'
         run: |
           npm run typecheck
-          npm run build
           npm run lint:lines
       - name: Test on Node
         if: matrix.runtime == 'node'

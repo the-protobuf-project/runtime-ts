@@ -1,0 +1,84 @@
+{
+  "name": "@the-protobuf-project/codemode",
+  "version": "0.1.0",
+  "description": "Code Mode: run model-written code against generated connectors in a sandbox, with approvals, replay and rollback.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/the-protobuf-project/runtime-ts.git",
+    "directory": "codemode"
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./quickjs": {
+      "source": "./src/quickjs/index.ts",
+      "types": "./dist/quickjs/index.d.ts",
+      "default": "./dist/quickjs/index.js"
+    },
+    "./deno": {
+      "source": "./src/deno/index.ts",
+      "types": "./dist/deno/index.d.ts",
+      "default": "./dist/deno/index.js"
+    },
+    "./cloudflare": {
+      "source": "./src/cloudflare/index.ts",
+      "types": "./dist/cloudflare/index.d.ts",
+      "default": "./dist/cloudflare/index.js"
+    },
+    "./browser": {
+      "source": "./src/browser/index.ts",
+      "types": "./dist/browser/index.d.ts",
+      "default": "./dist/browser/index.js"
+    },
+    "./mcp": {
+      "source": "./src/mcp/index.ts",
+      "types": "./dist/mcp/index.d.ts",
+      "default": "./dist/mcp/index.js"
+    },
+    "./ai": {
+      "source": "./src/ai/index.ts",
+      "types": "./dist/ai/index.d.ts",
+      "default": "./dist/ai/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "test:bun": "bun test ./test",
+    "test:deno": "deno test --no-check --allow-read --allow-env --allow-run test/"
+  },
+  "dependencies": {
+    "@the-protobuf-project/errors": "^0.1.0",
+    "@the-protobuf-project/protobuf": "^0.1.0",
+    "sucrase": "^3.35.1"
+  },
+  "peerDependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.0",
+    "ai": "^7.0.0",
+    "quickjs-emscripten": "^0.32.0"
+  },
+  "peerDependenciesMeta": {
+    "@modelcontextprotocol/sdk": {
+      "optional": true
+    },
+    "ai": {
+      "optional": true
+    },
+    "quickjs-emscripten": {
+      "optional": true
+    }
+  }
+}
