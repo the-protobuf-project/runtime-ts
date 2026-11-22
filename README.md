@@ -12,60 +12,71 @@ work happens here. It is the TypeScript counterpart of
 module is usable by hand as well.
 
 It runs on Bun, Node 22.18+, Deno and Cloudflare Workers, with no build step on
-your side: the package ships compiled JavaScript with types.
+your side: each package ships compiled JavaScript with types.
 
 ```mermaid
 flowchart LR
     proto[".proto"] --> plugins["protoc-gen-* plugins"]
     plugins --> gen["generated TypeScript"]
-    gen --> rt["@the-protobuf-project/runtime-ts"]
+    gen --> rt["runtime-ts packages"]
     rt --> out["HTTP and Connect services,<br/>Code Mode sandboxes, MCP"]
 ```
 
-## Modules
+## Packages
 
-One package, `@the-protobuf-project/runtime-ts`, with a subpath per module. Each
-module is its own folder with its own `tsconfig.json`, `src/` and `dist/`,
-compiled on its own, in dependency order, by `tsc -b`. Modules import each other
-through the package's subpaths, never by relative path, like the modules of
-runtime-go.
+Each folder in [`packages/`](packages) is its own npm package with its own
+`package.json`, `tsconfig.json`, `src/` and `dist/`, built and published on its
+own, like the modules of runtime-go. Packages depend on each other by name.
 
-| Import | What it does | Generated against it by |
+| Package | What it does | Generated against it by |
 | --- | --- | --- |
-| [`@the-protobuf-project/runtime-ts/errors`](errors) | `StatusError` with gRPC codes, and mapping from HTTP and Connect | |
-| [`@the-protobuf-project/runtime-ts/protobuf`](protobuf) | Binary wire format, protojson, well-known types, enums, resource names, the `Any` registry | every TypeScript plugin |
-| [`@the-protobuf-project/runtime-ts/network`](network) | `google.api.http` transcoding and Connect clients, a Connect server handler, the `Transport` interface | every TypeScript plugin |
-| [`@the-protobuf-project/runtime-ts/codemode`](codemode) | Code Mode: executions, approvals, replay, rollback, snippets, search, stores | [protoc-gen-codemode](https://github.com/the-protobuf-project/codemode) |
+| [`@the-protobuf-project/runtime-ts-errors`](packages/errors) | `StatusError` with gRPC codes, and mapping from HTTP and Connect | |
+| [`@the-protobuf-project/runtime-ts-protobuf`](packages/protobuf) | Binary wire format, protojson, well-known types, enums, resource names, the `Any` registry | every TypeScript plugin |
+| [`@the-protobuf-project/runtime-ts-network`](packages/network) | `google.api.http` transcoding and Connect clients, a Connect server handler, the `Transport` interface | every TypeScript plugin |
+| [`@the-protobuf-project/runtime-ts-codemode`](packages/codemode) | Code Mode: executions, approvals, replay, rollback, snippets, search, stores | [protoc-gen-codemode](https://github.com/the-protobuf-project/codemode) |
 
 Code Mode has a subpath per sandbox and surface, so their dependencies stay
 optional; install the ones you use:
 
 | Import | What it adds | Needs |
 | --- | --- | --- |
-| `.../codemode/quickjs` | Sandbox: QuickJS in WebAssembly (Bun, Node, Deno, browsers) | `quickjs-emscripten` |
-| `.../codemode/deno` | Sandbox: a Deno process with every permission denied | a `deno` binary |
-| `.../codemode/cloudflare` | Sandbox: a Worker Loader isolate; Durable Object storage | Cloudflare Workers |
-| `.../codemode/browser` | Sandbox: a sandboxed iframe | a browser |
-| `.../codemode/mcp` | Serve a runtime as an MCP server | `@modelcontextprotocol/sdk` |
-| `.../codemode/ai` | The Code Mode tool for the Vercel AI SDK | `ai` |
+| `runtime-ts-codemode/quickjs` | Sandbox: QuickJS in WebAssembly (Bun, Node, Deno, browsers) | `quickjs-emscripten` |
+| `runtime-ts-codemode/deno` | Sandbox: a Deno process with every permission denied | a `deno` binary |
+| `runtime-ts-codemode/cloudflare` | Sandbox: a Worker Loader isolate; Durable Object storage | Cloudflare Workers |
+| `runtime-ts-codemode/browser` | Sandbox: a sandboxed iframe | a browser |
+| `runtime-ts-codemode/mcp` | Serve a runtime as an MCP server | `@modelcontextprotocol/sdk` |
+| `runtime-ts-codemode/ai` | The Code Mode tool for the Vercel AI SDK | `ai` |
 
 ## Install
 
-```sh
-bun add github:the-protobuf-project/runtime-ts   # until the first npm release
-bun add quickjs-emscripten                       # for codemode/quickjs
+The packages are published to [GitHub Packages](https://github.com/orgs/the-protobuf-project/packages).
+GitHub's npm registry needs a token to install, even for public packages. Point
+the scope at it in an `.npmrc` next to your `package.json`, which Bun, npm, pnpm
+and yarn all read:
+
+```ini
+@the-protobuf-project:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
 ```
 
-Bun runs the TypeScript sources directly, through the `bun` export condition,
-so nothing is built on install. npm, pnpm and yarn build `dist/` on install
-(`prepare`) for Node and Deno.
+Then, with `GITHUB_TOKEN` set to a token that can read packages (`gh auth token`
+after `gh auth refresh -s read:packages`, or the workflow's `GITHUB_TOKEN` in
+Actions):
+
+```sh
+bun add @the-protobuf-project/runtime-ts-codemode @the-protobuf-project/runtime-ts-network
+bun add quickjs-emscripten            # for runtime-ts-codemode/quickjs
+```
+
+Bun runs the TypeScript sources directly through the `bun` export condition;
+Node and Deno use the compiled `dist/`.
 
 ## Example
 
 ```ts
-import { createCodemode } from "@the-protobuf-project/runtime-ts/codemode";
-import { QuickJSExecutor } from "@the-protobuf-project/runtime-ts/codemode/quickjs";
-import { httpTransport } from "@the-protobuf-project/runtime-ts/network";
+import { createCodemode } from "@the-protobuf-project/runtime-ts-codemode";
+import { QuickJSExecutor } from "@the-protobuf-project/runtime-ts-codemode/quickjs";
+import { httpTransport } from "@the-protobuf-project/runtime-ts-network";
 import { catalog, config, connectors, libraryV1 } from "./gen/index.ts";
 
 const client = new libraryV1.LibraryServiceClient(httpTransport({ baseUrl: "https://library.example.com" }));
@@ -81,13 +92,25 @@ Node and Deno in CI.
 
 ```sh
 bun install
-bun run build          # tsc -b: every module, in dependency order
+bun run build          # tsc -b: every package, in dependency order
 bun run typecheck      # build, then type-check the tests
 bun run test           # Bun
 bun run test:node
 bun run test:deno      # CODEMODE_DENO=<deno binary> runs the Deno sandbox tests under Bun and Node too
 bun run lint:lines     # hand-written files stay under 200 lines
 ```
+
+## Releasing
+
+```sh
+./scripts/version.sh 0.2.0        # every package, and the ranges between them
+git commit -am "chore: release 0.2.0"
+git tag v0.2.0 && git push origin main v0.2.0
+```
+
+The tag runs [`release.yml`](.github/workflows/release.yml): it checks the
+versions match the tag, builds, tests, and publishes every package to GitHub
+Packages.
 
 ## License
 

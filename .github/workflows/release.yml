@@ -1,0 +1,47 @@
+name: Release
+
+# Publishes every package in packages/ to GitHub Packages when a version tag
+# is pushed. Bump versions first with ./scripts/version.sh <version>, commit,
+# then tag: git tag v<version> && git push origin v<version>.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    name: Publish to GitHub Packages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          registry-url: https://npm.pkg.github.com
+          scope: "@the-protobuf-project"
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: bun install --frozen-lockfile
+      - name: Tag matches every package version
+        run: |
+          want="${GITHUB_REF_NAME#v}"
+          for p in packages/*/package.json; do
+            got=$(node -p "require('./$p').version")
+            if [ "$got" != "$want" ]; then echo "$p is $got, tag is $want"; exit 1; fi
+          done
+      - name: Build and test
+        run: |
+          bun run typecheck
+          bun run test
+      - name: Publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for p in errors protobuf network codemode; do
+            (cd "packages/$p" && npm publish)
+          done

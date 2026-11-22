@@ -2,16 +2,16 @@
   "files": [],
   "references": [
     {
-      "path": "errors"
+      "path": "packages/errors"
     },
     {
-      "path": "protobuf"
+      "path": "packages/protobuf"
     },
     {
-      "path": "network"
+      "path": "packages/network"
     },
     {
-      "path": "codemode"
+      "path": "packages/codemode"
     }
   ]
 }

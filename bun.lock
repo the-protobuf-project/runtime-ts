@@ -3,10 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "@the-protobuf-project/runtime-ts",
-      "dependencies": {
-        "sucrase": "^3.35.1",
-      },
+      "name": "runtime-ts",
       "devDependencies": {
         "@modelcontextprotocol/sdk": "^1.32.2",
         "@types/bun": "^1.4.5",
@@ -15,6 +12,15 @@
         "quickjs-emscripten": "^0.32.0",
         "typescript": "^7.0.2",
         "zod": "^4.6.7",
+      },
+    },
+    "packages/codemode": {
+      "name": "@the-protobuf-project/runtime-ts-codemode",
+      "version": "0.1.0",
+      "dependencies": {
+        "@the-protobuf-project/runtime-ts-errors": "^0.1.0",
+        "@the-protobuf-project/runtime-ts-protobuf": "^0.1.0",
+        "sucrase": "^3.35.1",
       },
       "peerDependencies": {
         "@modelcontextprotocol/sdk": "^1.32.0",
@@ -26,6 +32,25 @@
         "ai",
         "quickjs-emscripten",
       ],
+    },
+    "packages/errors": {
+      "name": "@the-protobuf-project/runtime-ts-errors",
+      "version": "0.1.0",
+    },
+    "packages/network": {
+      "name": "@the-protobuf-project/runtime-ts-network",
+      "version": "0.1.0",
+      "dependencies": {
+        "@the-protobuf-project/runtime-ts-errors": "^0.1.0",
+        "@the-protobuf-project/runtime-ts-protobuf": "^0.1.0",
+      },
+    },
+    "packages/protobuf": {
+      "name": "@the-protobuf-project/runtime-ts-protobuf",
+      "version": "0.1.0",
+      "dependencies": {
+        "@the-protobuf-project/runtime-ts-errors": "^0.1.0",
+      },
     },
   },
   "packages": {
@@ -58,6 +83,14 @@
     "@modelcontextprotocol/sdk": ["@modelcontextprotocol/sdk@1.32.2", "", { "dependencies": { "@hono/node-server": "^1.19.9 || ^2.0.5", "ajv": "^8.17.1", "ajv-formats": "^3.0.1", "content-type": "^1.0.5", "cors": "^2.8.5", "cross-spawn": "^7.0.5", "eventsource": "^3.0.2", "eventsource-parser": "^3.0.0", "express": "^5.2.1", "express-rate-limit": "^8.2.1", "hono": "^4.11.4", "jose": "^6.1.3", "json-schema-typed": "^8.0.2", "pkce-challenge": "^5.0.0", "raw-body": "^3.0.0", "zod": "^3.25 || ^4.0", "zod-to-json-schema": "^3.25.1" }, "peerDependencies": { "@cfworker/json-schema": "^4.1.1" }, "optionalPeers": ["@cfworker/json-schema"] }, "sha512-SWsVtH/0vULSQStoZ6xxH2K09Li8fXYTMC64ZeogCdpZ3XSi1eCPOByV1OpuJxuI3OcmHhosDWYyii07tpPsLw=="],
 
     "@standard-schema/spec": ["@standard-schema/spec@1.1.0", "", {}, "sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w=="],
+
+    "@the-protobuf-project/runtime-ts-codemode": ["@the-protobuf-project/runtime-ts-codemode@workspace:packages/codemode"],
+
+    "@the-protobuf-project/runtime-ts-errors": ["@the-protobuf-project/runtime-ts-errors@workspace:packages/errors"],
+
+    "@the-protobuf-project/runtime-ts-network": ["@the-protobuf-project/runtime-ts-network@workspace:packages/network"],
+
+    "@the-protobuf-project/runtime-ts-protobuf": ["@the-protobuf-project/runtime-ts-protobuf@workspace:packages/protobuf"],
 
     "@types/bun": ["@types/bun@1.4.5", "", { "dependencies": { "bun-types": "1.4.5" } }, "sha512-DpgwNI9z0L1S0gtb45QLCWgwCUcMLnsHYMJHQvpNj7erGiCGBvpggltAIeARrtobNMKMuy0UP7i56tKKgwFs/Q=="],
 

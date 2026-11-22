@@ -13,5 +13,5 @@ while IFS= read -r file; do
     status=1
   fi
 done < <(git ls-files --cached --others --exclude-standard -- '*.ts' '*.sh' \
-  | grep -v -E '(^|/)node_modules/|(^|/)dist/')
+  | grep -v -E "(^|/)node_modules/|(^|/)dist/")
 exit $status
