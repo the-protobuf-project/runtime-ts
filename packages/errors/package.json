@@ -1,6 +1,6 @@
 {
   "name": "@the-protobuf-project/errors",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "gRPC status errors, and their mapping from HTTP and Connect.",
   "license": "Apache-2.0",
   "type": "module",

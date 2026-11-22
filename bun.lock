@@ -17,10 +17,10 @@
     },
     "packages/codemode": {
       "name": "@the-protobuf-project/codemode",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "dependencies": {
-        "@the-protobuf-project/errors": "^0.1.0",
-        "@the-protobuf-project/protobuf": "^0.1.0",
+        "@the-protobuf-project/errors": "^0.1.1",
+        "@the-protobuf-project/protobuf": "^0.1.1",
         "sucrase": "^3.35.1",
       },
       "peerDependencies": {
@@ -36,21 +36,21 @@
     },
     "packages/errors": {
       "name": "@the-protobuf-project/errors",
-      "version": "0.1.0",
+      "version": "0.1.1",
     },
     "packages/network": {
       "name": "@the-protobuf-project/network",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "dependencies": {
-        "@the-protobuf-project/errors": "^0.1.0",
-        "@the-protobuf-project/protobuf": "^0.1.0",
+        "@the-protobuf-project/errors": "^0.1.1",
+        "@the-protobuf-project/protobuf": "^0.1.1",
       },
     },
     "packages/protobuf": {
       "name": "@the-protobuf-project/protobuf",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "dependencies": {
-        "@the-protobuf-project/errors": "^0.1.0",
+        "@the-protobuf-project/errors": "^0.1.1",
       },
     },
   },
