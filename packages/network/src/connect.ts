@@ -4,7 +4,14 @@
 import { codeFromConnect, codeFromHttpStatus, StatusError } from "@the-protobuf-project/errors";
 import { BinaryReader } from "@the-protobuf-project/protobuf";
 import { bidiStream, clientStream, serverStream } from "./connect_stream.ts";
-import { callHeaders, callSignal, type Duplex, type FetchTransportOptions, type Transport } from "./types.ts";
+import {
+  callHeaders,
+  callSignal,
+  type Duplex,
+  type FetchTransportOptions,
+  type Transport,
+  transportError,
+} from "./types.ts";
 
 /** Options for the Connect transport. */
 export interface ConnectTransportOptions extends FetchTransportOptions {
@@ -48,10 +55,17 @@ export function connectTransport(options: ConnectTransportOptions): ConnectTrans
       const signal = callSignal(callOptions);
       if (signal) init.signal = signal;
 
-      const response = await doFetch(`${base}/${method.service}/${method.name}`, init);
-      if (!response.ok) throw connectError(response.status, await response.text());
-      if (binary) return method.output.decode(new BinaryReader(new Uint8Array(await response.arrayBuffer())));
-      const text = await response.text();
+      let response: Response;
+      let bytes: Uint8Array;
+      try {
+        response = await doFetch(`${base}/${method.service}/${method.name}`, init);
+        bytes = new Uint8Array(await response.arrayBuffer());
+      } catch (e) {
+        throw transportError(e, signal);
+      }
+      if (!response.ok) throw connectError(response.status, new TextDecoder().decode(bytes));
+      if (binary) return method.output.decode(new BinaryReader(bytes));
+      const text = new TextDecoder().decode(bytes);
       return method.output.fromJson(text ? JSON.parse(text) : {});
     },
     serverStream: (method, request, callOptions) => serverStream(options, method, request, callOptions),

@@ -6,7 +6,7 @@ import { BinaryReader } from "@the-protobuf-project/protobuf";
 import type { ConnectTransportOptions } from "./connect.ts";
 import { connectError } from "./connect.ts";
 import { COMPRESSED, chunks, END_STREAM, endStreamError, envelope, envelopes } from "./envelope.ts";
-import { type CallOptions, callHeaders, callSignal, type MethodDescriptor } from "./types.ts";
+import { type CallOptions, callHeaders, callSignal, type MethodDescriptor, transportError } from "./types.ts";
 
 /** How one stream's messages are written and read: binary or JSON. */
 interface Codec<I, O> {
@@ -62,6 +62,15 @@ async function* replies<O>(body: AsyncIterable<Uint8Array>, decode: (d: Uint8Arr
   throw new StatusError("INTERNAL", "the stream ended without an end-stream message");
 }
 
+/** The replies, with a failure reported as what it means to the caller. */
+async function* mapped<O>(source: AsyncIterable<O>, signal: AbortSignal | undefined): AsyncGenerator<O> {
+  try {
+    yield* source;
+  } catch (e) {
+    throw transportError(e, signal);
+  }
+}
+
 /** The requests as envelopes. */
 async function* outgoing<I>(requests: AsyncIterable<I>, encode: (m: I) => Uint8Array): AsyncGenerator<Uint8Array> {
   for await (const request of requests) yield envelope(0, encode(request));
@@ -99,10 +108,15 @@ async function fetchStream<O>(
   const init: RequestInit & { duplex?: "half" } = { method: "POST", headers, body: readable(body), duplex: "half" };
   const signal = callSignal(callOptions);
   if (signal) init.signal = signal;
-  const response = await doFetch(url, init);
-  if (!response.ok) throw connectError(response.status, await response.text());
+  let response: Response;
+  try {
+    response = await doFetch(url, init);
+    if (!response.ok) throw connectError(response.status, await response.text());
+  } catch (e) {
+    throw transportError(e, signal);
+  }
   if (!response.body) throw new StatusError("INTERNAL", "the stream has no body");
-  return replies(chunks(response.body), decode);
+  return mapped(replies(chunks(response.body), decode), signal);
 }
 
 export async function* serverStream<I, O>(
@@ -152,16 +166,22 @@ export async function* bidiStream<I, O>(
   }
   const { url, headers, codec: c } = await prepare(options, method, callOptions);
   const signal = callSignal(callOptions);
-  const response = await options.duplex.request({
-    url,
-    headers,
-    body: outgoing(requests, c.encode),
-    ...(signal ? { signal } : {}),
-  });
+  if (signal?.aborted) throw transportError(undefined, signal);
+  let response: Awaited<ReturnType<NonNullable<ConnectTransportOptions["duplex"]>["request"]>>;
+  try {
+    response = await options.duplex.request({
+      url,
+      headers,
+      body: outgoing(requests, c.encode),
+      ...(signal ? { signal } : {}),
+    });
+  } catch (e) {
+    throw transportError(e, signal);
+  }
   if (response.status !== 200) {
     let text = "";
     for await (const chunk of response.body) text += new TextDecoder().decode(chunk, { stream: true });
     throw connectError(response.status, text);
   }
-  yield* replies(response.body, c.decode);
+  yield* mapped(replies(response.body, c.decode), signal);
 }

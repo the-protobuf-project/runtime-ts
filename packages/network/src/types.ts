@@ -1,6 +1,8 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
+import { StatusError } from "@the-protobuf-project/errors";
+
 import type { MessageCodec } from "@the-protobuf-project/protobuf";
 
 /** A google.api.http binding. */
@@ -86,6 +88,25 @@ export interface FetchTransportOptions {
   fetch?: Fetch;
   /** Headers sent with every call, e.g. authorization. */
   headers?: Record<string, string> | (() => Record<string, string> | Promise<Record<string, string>>);
+}
+
+/**
+ * What a failed exchange means to the caller: its own deadline is DEADLINE_EXCEEDED, its
+ * own abort CANCELLED, and anything else that is not already a StatusError (no server, a
+ * reset connection) UNAVAILABLE. The signal is checked first, because an aborted exchange
+ * ends however the platform ends it.
+ */
+export function transportError(error: unknown, signal: AbortSignal | undefined): StatusError {
+  if (signal?.aborted) {
+    const reason: unknown = signal.reason;
+    const timedOut = reason instanceof Error && reason.name === "TimeoutError";
+    return timedOut
+      ? new StatusError("DEADLINE_EXCEEDED", "the call ran past its deadline", { cause: reason })
+      : new StatusError("CANCELLED", "the call was cancelled", { cause: reason });
+  }
+  if (error instanceof StatusError) return error;
+  const message = error instanceof Error ? error.message : String(error);
+  return new StatusError("UNAVAILABLE", `the server could not be reached: ${message}`, { cause: error });
 }
 
 /** Combines a caller's signal with a timeout. */
