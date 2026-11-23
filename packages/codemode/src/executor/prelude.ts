@@ -45,7 +45,7 @@ const __call = async (op, payload) => {
 };
 const __namespace = (name, methods) => {
   const target = {};
-  for (const m of methods) target[m] = (input) => __call("call", { path: name + "." + m, args: input === undefined ? {} : input });
+  for (const m of methods) target[m] = (input, options) => __call("call", { path: name + "." + m, args: input === undefined ? {} : input, ...(options === undefined ? {} : { options }) });
   return new Proxy(Object.freeze(target), {
     get(t, key) {
       if (typeof key === "string" && !(key in t) && key !== "then") {
