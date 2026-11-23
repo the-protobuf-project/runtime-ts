@@ -1,6 +1,6 @@
 {
   "name": "@the-protobuf-project/codemode",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Code Mode: run model-written code against generated connectors in a sandbox, with approvals, replay and rollback.",
   "license": "Apache-2.0",
   "type": "module",
@@ -71,9 +71,9 @@
     "test:deno": "deno test --no-check --allow-read --allow-env --allow-run test/"
   },
   "dependencies": {
-    "@the-protobuf-project/errors": "^0.2.0",
-    "@the-protobuf-project/network": "^0.2.0",
-    "@the-protobuf-project/protobuf": "^0.2.0",
+    "@the-protobuf-project/errors": "^0.3.0",
+    "@the-protobuf-project/network": "^0.3.0",
+    "@the-protobuf-project/protobuf": "^0.3.0",
     "sucrase": "^3.35.1"
   },
   "peerDependencies": {
