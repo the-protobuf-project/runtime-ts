@@ -22,6 +22,8 @@ export interface CatalogMethod {
   /** Sandbox names of every type the method's input and output reach. */
   readonly types: readonly string[];
   readonly examples: readonly string[];
+  /** Set for a streaming RPC: what its sandbox call takes and returns differs from a unary one. */
+  readonly streaming?: "server" | "client" | "bidi";
 }
 
 /** One sandbox global. */

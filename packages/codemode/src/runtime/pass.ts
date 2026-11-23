@@ -43,14 +43,19 @@ export async function runPass(state: RuntimeState, exec: Execution): Promise<voi
   let fatal: string | undefined;
   const max = state.maxValueBytes;
 
-  const call = async (path: string, args: unknown): Promise<unknown> => {
+  const call = async (path: string, args: unknown, options: unknown): Promise<unknown> => {
     const s = ++seq;
     const target = state.methods.get(path);
     if (!target) throw new StatusError("NOT_FOUND", `${path} is not a method; use codemode.search() to find one`);
-    checkSize(`${path} arguments`, args, max);
+    checkSize(`${path} arguments`, { args, options }, max);
     const entry = exec.log.find((e) => e.seq === s);
     if (entry) {
-      if (entry.kind !== "call" || entry.path !== path || stableJson(entry.args) !== stableJson(args)) {
+      if (
+        entry.kind !== "call" ||
+        entry.path !== path ||
+        stableJson(entry.args) !== stableJson(args) ||
+        stableJson(entry.options ?? null) !== stableJson(options ?? null)
+      ) {
         throw new Stop(
           `replay diverged at call ${s}: expected ${entry.path}, got ${path} with different arguments. ` +
             "Call methods one at a time, in the same order, and record time or randomness with codemode.step().",
@@ -67,17 +72,24 @@ export async function runPass(state: RuntimeState, exec: Execution): Promise<voi
         method: target.method.name,
         path,
         args,
+        ...(options === undefined ? {} : { options }),
         ...(target.method.approvalMessage ? { message: target.method.approvalMessage } : {}),
       });
       throw new Stop();
     }
     try {
-      const result = await target.method.execute(args, { executionId: exec.id, signal: controller.signal });
+      const context = {
+        executionId: exec.id,
+        signal: controller.signal,
+        ...(options === undefined ? {} : { options }),
+      };
+      const result = await target.method.execute(args, context);
       checkSize(`${path} result`, result, max);
-      record(exec, { seq: s, kind: "call", path, args, result });
+      record(exec, { seq: s, kind: "call", path, args, ...(options === undefined ? {} : { options }), result });
       return result;
     } catch (e) {
-      record(exec, { seq: s, kind: "call", path, args, error: serializeError(e) });
+      const opts = options === undefined ? {} : { options };
+      record(exec, { seq: s, kind: "call", path, args, ...opts, error: serializeError(e) });
       throw e;
     }
   };
@@ -96,7 +108,7 @@ export async function runPass(state: RuntimeState, exec: Execution): Promise<voi
     try {
       const p = JSON.parse(payload) as Record<string, unknown>;
       let value: unknown = null;
-      if (op === "call") value = await call(String(p.path), p.args);
+      if (op === "call") value = await call(String(p.path), p.args, p.options ?? undefined);
       else if (op === "step") value = step(String(p.name));
       else if (op === "step.put") {
         checkSize("step value", p.value, max);

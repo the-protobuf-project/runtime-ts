@@ -24,6 +24,8 @@ export interface LogEntry {
   /** "library.createBook" for calls, the step name for steps. */
   path: string;
   args?: unknown;
+  /** The call's second argument, when it had one. */
+  options?: unknown;
   result?: unknown;
   error?: SerializedError;
   /** Set once rollback has undone the call. */
@@ -38,6 +40,8 @@ export interface PendingAction {
   method: string;
   path: string;
   args: unknown;
+  /** The call's second argument, e.g. a stream's { limit, timeoutMs }. */
+  options?: unknown;
   message?: string;
 }
 

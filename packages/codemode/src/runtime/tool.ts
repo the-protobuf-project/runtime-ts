@@ -12,7 +12,7 @@ export interface CodemodeTool {
   execute(input: CodeInput): Promise<CodeOutput>;
 }
 
-const howTo = `Run JavaScript in a sandbox to work with the APIs below. Write one async arrow function, such as
+const rules = `Run JavaScript in a sandbox to work with the APIs below. Write one async arrow function, such as
 async () => { const page = await ns.list({}); return page.items.length; }
 and return the value you need. The sandbox has no network or filesystem; the namespaces are the only way out.
 
@@ -23,8 +23,14 @@ Rules:
 - Some calls need a person's approval. The tool then returns status "paused"; the call runs once approved.
 - Return only what you need: large results are truncated.`;
 
+const streams = `
+- Streaming methods are one call each. A server-streaming or bidi method returns { messages, complete } once its stream
+  ends, or after options.limit replies (default 100) or options.timeoutMs (default 10000); complete is false when it was
+  cut short. Client-streaming and bidi methods take an array of requests.`;
+
 /** Builds the codemode tool description from the catalog. */
 export function toolDescription(catalog: Catalog, discovery: "progressive" | "inline"): string {
+  const howTo = catalog.methods.some((m) => m.streaming) ? `${rules}${streams}` : rules;
   if (discovery === "inline") {
     const used = [...new Set(catalog.methods.flatMap((m) => m.types))].sort();
     const types = used.map((t) => catalog.types[t] ?? "").join("\n");

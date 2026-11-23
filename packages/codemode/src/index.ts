@@ -10,6 +10,16 @@ export { mergeCatalogs } from "./catalog/merge.ts";
 export { type Description, describe, type SearchResult, type SearchResults, search } from "./catalog/search.ts";
 export type { Catalog, CatalogMethod, CatalogNamespace, CatalogSnippet, CodemodeConfig } from "./catalog/types.ts";
 export { type ConnectorSpec, connector, type UnaryMethodSpec, unaryMethod } from "./connector/connector.ts";
+export {
+  type BidiStreamMethodSpec,
+  bidiStreamMethod,
+  type ClientStreamMethodSpec,
+  clientStreamMethod,
+  type ServerStreamMethodSpec,
+  type StreamOptions,
+  type StreamResult,
+  serverStreamMethod,
+} from "./connector/stream.ts";
 export type { CallContext, Connector, ConnectorMethod, ConnectorOptions, Replay } from "./connector/types.ts";
 export { normalizeCode } from "./executor/normalize.ts";
 export type { ExecuteRequest, ExecuteResult, Executor, HostCall } from "./executor/types.ts";

@@ -14,6 +14,11 @@ type Empty = Record<string, never>;
 /** google.protobuf.Any: "@type" plus the packed message's fields. */
 interface AnyMessage { "@type": string; [field: string]: unknown }
 
+/** How much of a stream a call reads: limit replies (default 100, at most 1000), timeoutMs (default 10000, at most 60000). */
+interface StreamOptions { limit?: number; timeoutMs?: number }
+/** A streaming call's replies; complete is false when limit or timeoutMs cut the stream short. */
+interface StreamResult<T> { messages: T[]; complete: boolean }
+
 /** A search hit: a method or a saved snippet. */
 interface CodemodeSearchResult {
   path: string;

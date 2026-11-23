@@ -12,6 +12,8 @@ export interface CallContext {
   executionId: string;
   /** Aborted when the pass times out or is cancelled. */
   signal?: AbortSignal;
+  /** The call's second argument in the sandbox, e.g. a stream's { limit, timeoutMs }. */
+  options?: unknown;
 }
 
 /**

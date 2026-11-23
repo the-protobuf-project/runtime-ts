@@ -119,9 +119,23 @@ export function codeFromHttpStatus(status: number): Code {
   }
 }
 
-/** Wraps any thrown value as a StatusError, keeping one that already is. */
+/**
+ * Reports whether value is a StatusError, from this copy of the package or another.
+ *
+ * An app can load two copies of this package, when its own version and a dependency's
+ * differ, and then `instanceof` fails across them and every code reads as UNKNOWN. So a
+ * StatusError is recognised by its shape: an Error named StatusError with a known code.
+ */
+export function isStatusError(value: unknown): value is StatusError {
+  return (
+    value instanceof StatusError ||
+    (value instanceof Error && value.name === "StatusError" && isCode((value as StatusError).code))
+  );
+}
+
+/** Wraps any thrown value as a StatusError, keeping one that already is, from any copy of this package. */
 export function toStatusError(error: unknown): StatusError {
-  if (error instanceof StatusError) return error;
+  if (isStatusError(error)) return error;
   if (error instanceof Error) return new StatusError("UNKNOWN", error.message, { cause: error });
   return new StatusError("UNKNOWN", String(error));
 }

@@ -67,7 +67,8 @@ toStatusError(new TypeError("boom")); // StatusError with code "UNKNOWN", keepin
 | `codeFromNumber` | function | Maps a numeric gRPC code (1-16) to its name. |
 | `codeFromConnect` | function | Maps a Connect protocol code ("invalid_argument") to its name. |
 | `codeFromHttpStatus` | function | Maps an HTTP status to the gRPC code google.api.http transcoding uses. |
-| `toStatusError` | function | Wraps any thrown value as a StatusError, keeping one that already is. |
+| `isStatusError` | function | Reports whether value is a StatusError, from this copy of the package or another. |
+| `toStatusError` | function | Wraps any thrown value as a StatusError, keeping one that already is, from any copy of this package. |
 | `invalid` | function | Throws INVALID_ARGUMENT with a path-qualified message. |
 
 <!-- api:end -->

@@ -83,6 +83,24 @@ createMcpServer(runtime, {
 await runtime.approve({ executionId: p.executionId, seq: p.seq });
 ```
 
+### Streaming RPCs
+
+Generated connectors expose streaming RPCs too. Each is one sandbox call, so it
+is approved as a whole and replayed from the log:
+
+```ts
+const { messages, complete } = await shop.watchShelf({ name: "shelves/1" }, { limit: 20, timeoutMs: 5000 });
+const { imported } = await shop.importBooks([{ bookId: "a" }, { bookId: "b" }]);
+const replies = await shop.chat([{ name: "shelves/a" }, { name: "shelves/b" }]);
+```
+
+A server-streaming or bidi call reads until the stream ends, or `limit`
+replies (default 100, at most 1000), or `timeoutMs` (default 10 s, at most
+60 s), and then cancels it; `complete` is false when it was cut short. Bidi is
+a batch: every request is sent, and a script cannot choose its next request
+from a reply. Hand-written connectors use `serverStreamMethod`,
+`clientStreamMethod` and `bidiStreamMethod` beside `unaryMethod`.
+
 ### An API without protos: OpenAPI
 
 `openApiConnector` turns an OpenAPI 3.0 or 3.1 spec into a namespace, one typed
@@ -215,6 +233,14 @@ Plus one global per service, such as `library`, typed by the generated
 | `connector` | function | Builds a connector, applying deployment options. |
 | `UnaryMethodSpec` | interface | A typed unary method, before it is wrapped for protojson. |
 | `unaryMethod` | function | Wraps a typed method so the sandbox can call it with protojson. |
+| `BidiStreamMethodSpec` | interface | A bidi RPC: a stream of requests and a stream of replies. |
+| `bidiStreamMethod` | function | Wraps a bidi RPC: `ns.chat([input, ...], { limit, timeoutMs })` sends every request and returns `{ messages, complete }`. |
+| `ClientStreamMethodSpec` | interface | A client-streaming RPC: a stream of requests, one reply. |
+| `clientStreamMethod` | function | Wraps a client-streaming RPC: `ns.upload([input, ...])` returns the one reply. |
+| `ServerStreamMethodSpec` | interface | A server-streaming RPC: one request, a stream of replies. |
+| `StreamOptions` | interface | How much of a stream a sandbox call reads. |
+| `StreamResult` | interface | What a server-streaming or bidi call returns to the sandbox. |
+| `serverStreamMethod` | function | Wraps a server-streaming RPC as a sandbox method: `ns.watch(input, { limit, timeoutMs })` returns `{ messages, complete }`. |
 | `CallContext` | interface | Context passed to every connector call. |
 | `Connector` | interface | A namespace of methods the sandbox can call, e.g. |
 | `ConnectorMethod` | interface | One sandbox method. |
