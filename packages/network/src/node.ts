@@ -46,26 +46,40 @@ export function http2Duplex(options: Http2DuplexOptions = {}): Http2Duplex {
 
   return {
     request({ url, headers, body, signal }: DuplexRequest): Promise<DuplexResponse> {
+      if (signal?.aborted) return Promise.reject(signal.reason);
       const target = new URL(url);
       const entry = session(target.origin);
       if (entry.active++ === 0) entry.session.ref();
       const stream = entry.session.request({ ":method": "POST", ":path": target.pathname + target.search, ...headers });
-      stream.on("close", () => {
-        if (--entry.active === 0) entry.session.unref();
-      });
       const abort = () => stream.close(constants.NGHTTP2_CANCEL);
       signal?.addEventListener("abort", abort, { once: true });
+      const closed = new Promise<void>((resolve) => stream.once("close", resolve));
+      void closed.then(() => {
+        signal?.removeEventListener("abort", abort);
+        if (--entry.active === 0) entry.session.unref();
+      });
 
-      // The request body is written while the response is read: that is the point.
+      // The request body is written while the response is read: that is the point. Once the
+      // exchange closes, however it closes, the requests are no longer read.
+      const requests = body[Symbol.asyncIterator]();
       void (async () => {
-        for await (const chunk of body) {
-          if (!stream.write(chunk)) await new Promise((resolve) => stream.once("drain", resolve));
+        while (true) {
+          const next = await Promise.race([requests.next(), closed.then(() => undefined)]);
+          if (next === undefined) break;
+          if (next.done) return void stream.end();
+          if (!stream.write(next.value)) {
+            await Promise.race([new Promise((resolve) => stream.once("drain", resolve)), closed]);
+          }
         }
-        stream.end();
+        void requests.return?.();
       })().catch((err: unknown) => stream.destroy(err instanceof Error ? err : new Error(String(err))));
 
       return new Promise((resolve, reject) => {
         stream.once("error", reject);
+        // A stream closed before its headers, by an abort or a reset, has no response.
+        void closed.then(() =>
+          reject(signal?.aborted ? signal.reason : new Error("the stream closed before a response")),
+        );
         stream.once("response", (head) => {
           const out: Record<string, string> = {};
           for (const [key, value] of Object.entries(head)) {

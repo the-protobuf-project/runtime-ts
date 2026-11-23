@@ -58,13 +58,19 @@ export function endStreamError(data: Uint8Array): StatusError | undefined {
 /** Iterates a ReadableStream with a reader, which every runtime supports. */
 export async function* chunks(stream: ReadableStream<Uint8Array>): AsyncGenerator<Uint8Array> {
   const reader = stream.getReader();
+  let finished = false;
   try {
     while (true) {
       const { done, value } = await reader.read();
-      if (done) return;
+      if (done) {
+        finished = true;
+        return;
+      }
       yield value;
     }
   } finally {
+    // A caller that stops reading stops the download, rather than leaving it running.
+    if (!finished) await reader.cancel().catch(() => undefined);
     reader.releaseLock();
   }
 }
