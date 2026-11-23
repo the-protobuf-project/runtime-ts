@@ -9,6 +9,7 @@ import {
   codeFromNumber,
   invalid,
   isCode,
+  isStatusError,
   StatusError,
   toStatusError,
 } from "../src/index.ts";
@@ -48,4 +49,15 @@ test("invalid throws INVALID_ARGUMENT with the path", () => {
     code: "INVALID_ARGUMENT",
     message: "book.title: expected a string",
   });
+});
+
+test("a StatusError from another copy of the package is still recognised", () => {
+  class Other extends Error {
+    code = "NOT_FOUND";
+    override name = "StatusError";
+  }
+  const foreign = new Other("gone");
+  assert.equal(isStatusError(foreign), true);
+  assert.equal(toStatusError(foreign).code, "NOT_FOUND");
+  assert.equal(isStatusError(new Error("plain")), false);
 });

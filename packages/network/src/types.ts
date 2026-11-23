@@ -1,7 +1,7 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { StatusError } from "@the-protobuf-project/errors";
+import { isStatusError, StatusError } from "@the-protobuf-project/errors";
 
 import type { MessageCodec } from "@the-protobuf-project/protobuf";
 
@@ -104,7 +104,7 @@ export function transportError(error: unknown, signal: AbortSignal | undefined):
       ? new StatusError("DEADLINE_EXCEEDED", "the call ran past its deadline", { cause: reason })
       : new StatusError("CANCELLED", "the call was cancelled", { cause: reason });
   }
-  if (error instanceof StatusError) return error;
+  if (isStatusError(error)) return error;
   const message = error instanceof Error ? error.message : String(error);
   return new StatusError("UNAVAILABLE", `the server could not be reached: ${message}`, { cause: error });
 }

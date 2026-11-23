@@ -1,7 +1,7 @@
 // Copyright 2026 The Protobuf Project authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { StatusError } from "@the-protobuf-project/errors";
+import { isStatusError, StatusError } from "@the-protobuf-project/errors";
 import { type Fetch, httpError } from "@the-protobuf-project/network";
 import type { JsonValue } from "@the-protobuf-project/protobuf";
 import { isJson, type Operation } from "./operations.ts";
@@ -64,7 +64,7 @@ export async function send(
     response = await options.fetch(request.url.href, init);
     bytes = await readBody(response, options.maxBytes);
   } catch (e) {
-    if (e instanceof StatusError) throw e;
+    if (isStatusError(e)) throw e;
     if (signal?.aborted) throw new StatusError("CANCELLED", `${op.name} was cancelled`);
     // fetch's own message can hold the URL, and with it a query credential.
     throw new StatusError("UNAVAILABLE", `${op.name}: ${op.method} ${op.path} got no response`);
